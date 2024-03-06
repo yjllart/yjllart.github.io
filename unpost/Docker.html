@@ -1,0 +1,635 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=dark>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Youj">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="安装curl -fsSL get.docker.com | sh   curl -fsSL get.docker.com -o get-docker.sh sudo sh get-docker.sh --mirror Aliyun   配置国内源创建或修改 &#x2F;etc&#x2F;docker&#x2F;daemon.json：  sudo mkdir -p &#x2F;etc&#x2F;d">
+<meta property="og:type" content="website">
+<meta property="og:title" content="page.title">
+<meta property="og:url" content="http://blog.yjll.art/unpost/Docker.html">
+<meta property="og:site_name" content="Youj&#39;s blog">
+<meta property="og:description" content="安装curl -fsSL get.docker.com | sh   curl -fsSL get.docker.com -o get-docker.sh sudo sh get-docker.sh --mirror Aliyun   配置国内源创建或修改 &#x2F;etc&#x2F;docker&#x2F;daemon.json：  sudo mkdir -p &#x2F;etc&#x2F;d">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-03-06T07:29:17.974Z">
+<meta property="article:modified_time" content="2024-03-06T07:29:17.974Z">
+<meta property="article:author" content="Youj">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>page.title - Youj&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"blog.yjll.art","root":"/","version":"1.9.7","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"gtag":null},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 60vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Youj&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="page.title"></span>
+          
+        </div>
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      <div class="container nopadding-x-md">
+        <div id="board"
+          >
+          
+          <div class="container">
+            <div class="row">
+              <div class="col-12 col-md-10 m-auto">
+                
+
+<article class="page-content">
+  <h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">curl -fsSL get.docker.com | sh 
+
+curl -fsSL get.docker.com -o get-docker.sh
+sudo sh get-docker.sh --mirror Aliyun<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+
+<h3 id="配置国内源"><a href="#配置国内源" class="headerlink" title="配置国内源"></a>配置国内源</h3><figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">创建或修改 &#x2F;etc&#x2F;docker&#x2F;daemon.json：
+
+sudo mkdir -p &#x2F;etc&#x2F;docker
+sudo tee &#x2F;etc&#x2F;docker&#x2F;daemon.json &lt;&lt;-&#39;EOF&#39;
+&#123;
+    &quot;registry-mirrors&quot;: [
+        &quot;https:&#x2F;&#x2F;dockerproxy.com&quot;,
+        &quot;https:&#x2F;&#x2F;docker.mirrors.ustc.edu.cn&quot;,
+        &quot;https:&#x2F;&#x2F;docker.nju.edu.cn&quot;
+    ]
+&#125;
+EOF
+sudo systemctl daemon-reload
+sudo systemctl restart docker<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+
+<h3 id="Docker代理"><a href="#Docker代理" class="headerlink" title="Docker代理"></a>Docker代理</h3><p><a target="_blank" rel="noopener" href="https://dockerproxy.com/">https://dockerproxy.com/</a></p>
+<h3 id="配置dockerd-走代理"><a href="#配置dockerd-走代理" class="headerlink" title="配置dockerd 走代理"></a>配置dockerd 走代理</h3><figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">sudo mkdir -p &#x2F;etc&#x2F;systemd&#x2F;system&#x2F;docker.service.d
+
+vim &#x2F;etc&#x2F;systemd&#x2F;system&#x2F;docker.service.d&#x2F;http-proxy.conf
+
+[Service]
+Environment&#x3D;&quot;HTTPS_PROXY&#x3D;http:&#x2F;&#x2F;localhost:1081&quot;
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+
+<p>$ sudo service docker restart</p>
+<h3 id="离线安装镜像"><a href="#离线安装镜像" class="headerlink" title="离线安装镜像"></a>离线安装镜像</h3><p>先从一个有网络的电脑下载docker镜像<br>docker pull centos<br>保存镜像到本地文件<br>docker save -o centos_image.docker centos<br>把镜像拷贝到无网络的电脑，然后通过docker加载镜像即可。<br>docker load -i centos_image.docker</p>
+<h3 id="导出-导入"><a href="#导出-导入" class="headerlink" title="导出/导入"></a>导出/导入</h3><figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">docker save gitlab-bak &gt; &#x2F;root&#x2F;gitlab-bak.tar
+docker load &lt; &#x2F;root&#x2F;gitlab-bak.tar
+
+docker export cb69c3765fba &gt; &#x2F;root&#x2F;gitlab_bak.tar
+docker import --change &#39;CMD [&quot;&#x2F;assets&#x2F;wrapper&quot;]&#39; &#x2F;root&#x2F;gitlab.tar gitlab:1.0.0<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<h3 id="删除操作"><a href="#删除操作" class="headerlink" title="删除操作"></a>删除操作</h3><figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none"># 删除已停止实例
+docker container prune
+
+# 删除无用镜像
+docker image prune -f -a<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+
+<h3 id="查看容器IP"><a href="#查看容器IP" class="headerlink" title="查看容器IP"></a>查看容器IP</h3><figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">docker inspect --format&#x3D;&#39;&#123;&#123;.NetworkSettings.IPAddress&#125;&#125;&#39; mysql-master<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre></div></figure>
+
+<h3 id="设置容器开机自起"><a href="#设置容器开机自起" class="headerlink" title="设置容器开机自起"></a>设置容器开机自起</h3><figure><div class="code-wrapper"><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> <span class="token function">docker</span> container update <span class="token parameter variable">--restart</span><span class="token operator">=</span>always  b6e4b684e251<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre></div></figure>
+
+<h3 id="删除所有none镜像"><a href="#删除所有none镜像" class="headerlink" title="删除所有none镜像"></a>删除所有none镜像</h3><figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">docker rmi &#96;docker images | grep  &quot;&lt;none&gt;&quot; | awk &#39;&#123;print $3&#125;&#39;&#96;<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre></div></figure>
+
+<h3 id="报错"><a href="#报错" class="headerlink" title="报错"></a>报错</h3><p>docker启动失败，systemctl status docker看到的日志报错如下：</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">Error starting daemon: error while opening volume store metadata database: timeout<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre></div></figure>
+
+<p>解决办法：</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">ps axf | grep docker | grep -v grep | awk &#39;&#123;print &quot;kill -9 &quot; $1&#125;&#39; | sudo sh 
+sudo systemctl start docker<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre></div></figure>
+
+<p>来源于：<br><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/43537790/docker-fails-to-start-due-to-volume-store-metadata-database-timeout">https://stackoverflow.com/questions/43537790/docker-fails-to-start-due-to-volume-store-metadata-database-timeout</a></p>
+<h3 id="查看磁盘占用"><a href="#查看磁盘占用" class="headerlink" title="查看磁盘占用"></a>查看磁盘占用</h3><p>docker system df -v</p>
+<h3 id="常用容器"><a href="#常用容器" class="headerlink" title="常用容器"></a>常用容器</h3><h4 id="ftp"><a href="#ftp" class="headerlink" title="ftp"></a>ftp</h4><figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">
+sudo docker run -v &#x2F;share:&#x2F;home&#x2F;vsftpd --network&#x3D;host --restart&#x3D;always -e FTP_USER&#x3D;yjll -e FTP_PASS&#x3D;admin0   fauria&#x2F;vsftpd 
+
+vim &#x2F;etc&#x2F;vsftpd&#x2F;vsftpd.conf
+local_root&#x3D;&#x2F;home&#x2F;vsftpd<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">version: &#39;3&#39;
+
+services:
+  ftpd_server:
+    image: stilliard&#x2F;pure-ftpd
+    container_name: pure-ftpd
+    ports:
+      - &quot;21:21&quot;
+      - &quot;30000-30009:30000-30009&quot;
+    volumes: 
+      - &quot;.&#x2F;data:&#x2F;home&#x2F;username&#x2F;&quot;
+      - &quot;.&#x2F;passwd:&#x2F;etc&#x2F;pure-ftpd&#x2F;passwd&quot;
+    environment:
+      PUBLICHOST: &quot;localhost&quot;
+      FTP_USER_NAME: username
+      FTP_USER_PASS: mypass
+      FTP_USER_HOME: &#x2F;home&#x2F;username
+    restart: always
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+
+
+
+<h4 id="samba"><a href="#samba" class="headerlink" title="samba"></a>samba</h4><figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">sudo docker run -it --network&#x3D;host --restart&#x3D;always -v &#x2F;share:&#x2F;mount  -d dperson&#x2F;samba -u &quot;yjll;admin0&quot; -s &quot;yjll;&#x2F;mount&#x2F;;yes;no;no;all;none&quot; <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre></div></figure>
+
+<h4 id="filebrowser"><a href="#filebrowser" class="headerlink" title="filebrowser"></a>filebrowser</h4><figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">docker run \
+    -v &#x2F;tmp:&#x2F;srv \
+	-v $PWD&#x2F;filebrowser.json:&#x2F;.filebrowser.json \
+	-v $PWD&#x2F;filebrowser.db:&#x2F;database.db \
+    -p 8888:80  -d \
+    filebrowser&#x2F;filebrowser
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<h4 id="aria2"><a href="#aria2" class="headerlink" title="aria2"></a>aria2</h4><figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">docker run -d \
+    --name aria2-pro \
+    --restart unless-stopped \
+    --network host \
+    -e RPC_SECRET&#x3D;token \
+    -e PUID&#x3D;$UID \
+    -e PGID&#x3D;$GID \
+    -v $PWD&#x2F;aria2-config:&#x2F;config \
+    -v &#x2F;share&#x2F;aria2:&#x2F;downloads \
+    p3terx&#x2F;aria2-pro
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+
+<figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">version: &quot;3.8&quot;
+
+services:
+
+  Aria2-Pro:
+    container_name: aria2-pro
+    image: p3terx&#x2F;aria2-pro
+    environment:
+      - PUID&#x3D;65534
+      - PGID&#x3D;65534
+      - UMASK_SET&#x3D;022
+      - RPC_PORT&#x3D;6800
+      - LISTEN_PORT&#x3D;6888
+      - DISK_CACHE&#x3D;64M
+      - IPV6_MODE&#x3D;true
+      - UPDATE_TRACKERS&#x3D;true
+      - CUSTOM_TRACKER_URL&#x3D;
+      - TZ&#x3D;Asia&#x2F;Shanghai
+      - RPC_SECRET&#x3D;token
+    volumes:
+      - $&#123;PWD&#125;&#x2F;aria2-config:&#x2F;config
+      - &#x2F;share&#x2F;aria2:&#x2F;downloads
+    network_mode: host
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 1m
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+<h4 id="mysql"><a href="#mysql" class="headerlink" title="mysql"></a>mysql</h4><figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">docker run -p 3307:3306 --name mysql-slave -v $PWD&#x2F;var&#x2F;lib&#x2F;mysql:&#x2F;var&#x2F;lib&#x2F;mysql -v $PWD&#x2F;etc&#x2F;my.cnf:&#x2F;etc&#x2F;my.cnf -v $PWD&#x2F;var&#x2F;log:&#x2F;var&#x2F;log  -e MYSQL_ROOT_PASSWORD&#x3D;Krkj@123456 -d mysql:5.7
+
+docker run -p 3308:3306 --name mysql-master -v $PWD&#x2F;var&#x2F;lib&#x2F;mysql:&#x2F;var&#x2F;lib&#x2F;mysql -v $PWD&#x2F;etc&#x2F;my.cnf:&#x2F;etc&#x2F;my.cnf -v $PWD&#x2F;var&#x2F;log:&#x2F;var&#x2F;log  -e MYSQL_ROOT_PASSWORD&#x3D;Krkj@123456 -d mysql:5.7
+
+docker run -p 3307:3306  -v $PWD&#x2F;var&#x2F;lib&#x2F;mysql:&#x2F;var&#x2F;lib&#x2F;mysql -v $PWD&#x2F;mysql.cnf:&#x2F;etc&#x2F;mysql&#x2F;conf.d&#x2F;mysql.cnf -e MYSQL_ROOT_PASSWORD&#x3D;123456 -d  mysql:8.0.16
+
+
+docker run -p 5758:3306  -v &#x2F;var&#x2F;lib&#x2F;mysql:&#x2F;var&#x2F;lib&#x2F;mysql -v &#x2F;etc&#x2F;mysql&#x2F;conf.d&#x2F;mysql.cnf:&#x2F;etc&#x2F;mysql&#x2F;conf.d&#x2F;mysql.cnf -e MYSQL_ROOT_PASSWORD&#x3D;xVv17eeOSHAD3icc -d  mysql:5.5
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<h4 id="Redis"><a href="#Redis" class="headerlink" title="Redis"></a>Redis</h4><figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">docker run --name redis --restart&#x3D;always -p 6379:6379 -v $PWD&#x2F;data:&#x2F;data -d  redis:4  redis-server   --appendonly yes --requirepass kr12345678
+
+docker run --name redis  -p 6768:6379 -v redis_data:&#x2F;data -d  redis:4  redis-server   --appendonly yes --requirepass xVv17eeOSHAD3icc<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<h4 id="RabbitMQ"><a href="#RabbitMQ" class="headerlink" title="RabbitMQ"></a>RabbitMQ</h4><figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">docker run --name rabbitmq -d -p 15672:15672 -p 5672:5672 -e RABBITMQ_DEFAULT_USER&#x3D;root -e RABBITMQ_DEFAULT_PASS&#x3D;Krkj@123456   rabbitmq:3.8.2-management<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre></div></figure>
+
+<h4 id="Clickhouse"><a href="#Clickhouse" class="headerlink" title="Clickhouse"></a>Clickhouse</h4><figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">docker run -d  --ulimit nofile&#x3D;262144:262144 --network&#x3D;host --volume&#x3D;clickhouse_database:&#x2F;var&#x2F;lib&#x2F;clickhouse yandex&#x2F;clickhouse-server:21.6.4.26-alpine
+docker run -d  --ulimit nofile&#x3D;262144:262144 --network&#x3D;host --volume&#x3D;clickhouse_database:&#x2F;var&#x2F;lib&#x2F;clickhouse yandex&#x2F;clickhouse-server:21.11.10<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre></div></figure>
+
+<h4 id="ElasticSearch"><a href="#ElasticSearch" class="headerlink" title="ElasticSearch"></a>ElasticSearch</h4><figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">docker network create esnetwork
+
+docker run -d --name kibana --net esnetwork -p 5601:5601 kibana:6.8.12
+
+docker run -d --name elasticsearch --net esnetwork  -v $PWD&#x2F;data:&#x2F;usr&#x2F;share&#x2F;elasticsearch&#x2F;data -p 9200:9200 -p 9300:9300 -e &quot;discovery.type&#x3D;single-node&quot; elasticsearch:6.8.12
+
+docker run -it -d -v  $PWD&#x2F;pipeline&#x2F;:&#x2F;etc&#x2F;logstash&#x2F;pipeline&#x2F; logstash:6.4.3 bash
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<h4 id="emby"><a href="#emby" class="headerlink" title="emby"></a>emby</h4><figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">docker run -d -v $PWD&#x2F;config:&#x2F;config -v &#x2F;share:&#x2F;share --network&#x3D;host --restart&#x3D;always emby&#x2F;embyserver:latest
+
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre></div></figure>
+
+<h4 id="jellyfin"><a href="#jellyfin" class="headerlink" title="jellyfin"></a>jellyfin</h4><p>docker run -d -v $PWD/config:/config -v /share:/share –network=host –restart=always jellyfin/jellyfin</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">version: &quot;2.1&quot;
+services:
+  jellyfin:
+    image: jellyfin&#x2F;jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - PUID&#x3D;1000
+      - PGID&#x3D;1000
+      - TZ&#x3D;Etc&#x2F;CN
+    volumes:
+      - .&#x2F;config:&#x2F;config
+      - &#x2F;share&#x2F;aria2:&#x2F;share&#x2F;aria2
+      - &#x2F;share&#x2F;video:&#x2F;share&#x2F;video
+    network_mode: &quot;host&quot;
+    restart: unless-stopped<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<h4 id="miniflux-RSS服务端"><a href="#miniflux-RSS服务端" class="headerlink" title="miniflux RSS服务端"></a>miniflux RSS服务端</h4><figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">version: &#39;3.4&#39;
+services:
+  miniflux:
+    image: miniflux&#x2F;miniflux:latest
+    container_name: miniflux
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL&#x3D;postgres:&#x2F;&#x2F;miniflux:secret@db&#x2F;miniflux?sslmode&#x3D;disable
+      - RUN_MIGRATIONS&#x3D;1
+      - FETCH_YOUTUBE_WATCH_TIME&#x3D;1
+      - CREATE_ADMIN&#x3D;1
+      - ADMIN_USERNAME&#x3D;yjll 
+      - ADMIN_PASSWORD&#x3D;adqsqsww21 
+      - BASE_URL&#x3D; https:&#x2F;&#x2F;rss.yjll.art
+      - POLLING_FREQUENCY&#x3D;10  &#x2F;&#x2F;每个 feed 的刷新间隔
+      - POLLING_PARSING_ERROR_LIMIT&#x3D;0 &#x2F;&#x2F;拉取出错后不会停止拉去，还是会按计划继续拉
+      - BATCH_SIZE&#x3D;100  &#x2F;&#x2F;每次拉取的 feed 数量
+      - POLLING_SCHEDULER&#x3D;entry_frequency &#x2F;&#x2F;拉取类型，根据上周的平均更新周期来拉取
+      - SCHEDULER_ENTRY_FREQUENCY_MAX_INTERVAL&#x3D;30 &#x2F;&#x2F;接上条，但也不会大于 30 分钟，建议和 POLLING_FREQUENCY 参数一起来看
+      - PROXY_OPTION&#x3D;all &#x2F;&#x2F;图片代理功能，Miniflux 先把源端的图片缓存到服务器上来，后续就不用客户端去源服务器拉了
+      - PROXY_PRIVATE_KEY&#x3D;password &#x2F;&#x2F; 使用客户端缓存过文章，然后某个时间重启了 docker 实例，那么会导致图片无法显示的情况，这是因为每次重启会随机生成 PROXY_PRIVATE_KEY,所以可以增加参数 PROXY_PRIVATE_KEY 固化 key ，便于解决更新、重启等场景下的图片显示问题。 
+      - DATABASE_MAX_CONNS&#x3D;50 &#x2F;&#x2F;增加数据库连接数，对于多图片的 feed 非常有效，可以大幅提升加载和访问速度
+      - DATABASE_MIN_CONNS&#x3D;5  &#x2F;&#x2F; 同上 
+      - WORKER_POOL_SIZE&#x3D;10  &#x2F;&#x2F;默认，或适当加大
+    restart: unless-stopped
+    ports:
+      - 8083:8080
+  db:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      - POSTGRES_USER&#x3D;miniflux
+      - POSTGRES_PASSWORD&#x3D;secret
+    volumes:
+      - .&#x2F;root_miniflux-db:&#x2F;var&#x2F;lib&#x2F;postgresql&#x2F;data
+    healthcheck:
+      test: [&quot;CMD&quot;, &quot;pg_isready&quot;, &quot;-U&quot;, &quot;miniflux&quot;]
+      interval: 10s
+      start_period: 30s
+    restart: unless-stopped
+
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<h4 id="navidrome-自建音乐播放器"><a href="#navidrome-自建音乐播放器" class="headerlink" title="navidrome 自建音乐播放器"></a>navidrome 自建音乐播放器</h4><figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">version: &quot;3&quot;
+services:
+  navidrome:
+    image: deluan&#x2F;navidrome:latest
+    ports:
+      - &quot;4533:4533&quot;
+    restart: unless-stopped
+    environment:
+      # Optional: put your config options customization here. Examples:
+      ND_SCANSCHEDULE: 1h
+      ND_LOGLEVEL: info  
+      ND_SESSIONTIMEOUT: 24h
+      ND_BASEURL: &quot;&quot;
+    volumes:
+      - &quot;.&#x2F;data:&#x2F;data&quot;
+      - &quot;&#x2F;share&#x2F;music:&#x2F;music:ro&quot;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+
+<h4 id="subconverter-订阅转换服务"><a href="#subconverter-订阅转换服务" class="headerlink" title="subconverter 订阅转换服务"></a>subconverter 订阅转换服务</h4><figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">version: &#39;3&#39;
+services:
+  subconverter:
+    image: tindy2013&#x2F;subconverter:latest
+    container_name: subconverter
+    ports:
+      - &quot;15051:25500&quot;
+    restart: always<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<h4 id="vaultwarden-自建密码服务"><a href="#vaultwarden-自建密码服务" class="headerlink" title="vaultwarden 自建密码服务"></a>vaultwarden 自建密码服务</h4><figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">version: &#39;3&#39;
+
+services:
+  vaultwarden:
+    image: vaultwarden&#x2F;server:latest
+    container_name: vaultwarden
+    restart: always
+    environment:
+      DOMAIN: &quot;https:&#x2F;&#x2F;pwd.yjll.art&quot;  # 您的域名；Vaultwarden 需要知道它是 https 才能正确处理附件
+    ports:
+      - &quot;8084:80&quot;
+    volumes:
+      - .&#x2F;vw-data:&#x2F;data<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<h4 id="webdav"><a href="#webdav" class="headerlink" title="webdav"></a>webdav</h4><figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">version: &quot;3&quot;
+services:
+  webdav:
+    image: stilleshan&#x2F;webdav
+    container_name: webdav
+    ports:
+      - &quot;8080:8080&quot;
+    volumes:
+      # - .&#x2F;config.yml:&#x2F;config.yml
+      - &#x2F;share:&#x2F;data
+    restart: always
+
+    <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+
+  
+
+</article>
+
+
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

@@ -1,0 +1,376 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=dark>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Youj">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="nginx配置proxy_pass时url末尾带“&#x2F;”与不带“&#x2F;”的区别 proxy_pass配置中url末尾带&#x2F;时，nginx转发时，会将原uri去除location匹配表达式后的内容拼接在proxy_pass中url之后。测试地址：http:&#x2F;&#x2F;127.0.0.1&#x2F;admin&#x2F;login 场景一：location &#x2F;admin&#x2F; {    proxy_pass http:&#x2F;&#x2F;127.0.0.1">
+<meta property="og:type" content="website">
+<meta property="og:title" content="page.title">
+<meta property="og:url" content="http://blog.yjll.art/unpost/Nginx.html">
+<meta property="og:site_name" content="Youj&#39;s blog">
+<meta property="og:description" content="nginx配置proxy_pass时url末尾带“&#x2F;”与不带“&#x2F;”的区别 proxy_pass配置中url末尾带&#x2F;时，nginx转发时，会将原uri去除location匹配表达式后的内容拼接在proxy_pass中url之后。测试地址：http:&#x2F;&#x2F;127.0.0.1&#x2F;admin&#x2F;login 场景一：location &#x2F;admin&#x2F; {    proxy_pass http:&#x2F;&#x2F;127.0.0.1">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-03-06T07:29:17.974Z">
+<meta property="article:modified_time" content="2024-03-06T07:29:17.974Z">
+<meta property="article:author" content="Youj">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>page.title - Youj&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"blog.yjll.art","root":"/","version":"1.9.7","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"gtag":null},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 60vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Youj&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="page.title"></span>
+          
+        </div>
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      <div class="container nopadding-x-md">
+        <div id="board"
+          >
+          
+          <div class="container">
+            <div class="row">
+              <div class="col-12 col-md-10 m-auto">
+                
+
+<article class="page-content">
+  <p><a target="_blank" rel="noopener" href="https://blog.csdn.net/zhanghui200920061988/article/details/105132167">nginx配置proxy_pass时url末尾带“/”与不带“/”的区别</a></p>
+<p>proxy_pass配置中url末尾带/时，nginx转发时，会将原uri去除location匹配表达式后的内容拼接在proxy_pass中url之后。<br>测试地址：<a target="_blank" rel="noopener" href="http://127.0.0.1/admin/login">http://127.0.0.1/admin/login</a></p>
+<p>场景一：<br>location /admin/ {<br>    proxy_pass <a target="_blank" rel="noopener" href="http://127.0.0.1:8080/server/">http://127.0.0.1:8080/server/</a>;<br>}<br>代理后实际访问地址：<a target="_blank" rel="noopener" href="http://127.0.0.1:8080/server/login">http://127.0.0.1:8080/server/login</a></p>
+<p>场景二：<br>location /admin {<br>    proxy_pass <a target="_blank" rel="noopener" href="http://127.0.0.1:8080/server/">http://127.0.0.1:8080/server/</a>;<br>}<br>代理后实际访问地址：<a target="_blank" rel="noopener" href="http://127.0.0.1:8080/server//login">http://127.0.0.1:8080/server//login</a></p>
+<p>场景三：<br>location /admin/ {<br>    proxy_pass <a target="_blank" rel="noopener" href="http://127.0.0.1:8080/">http://127.0.0.1:8080/</a>;<br>}<br>代理后实际访问地址：<a target="_blank" rel="noopener" href="http://127.0.0.1:8080/login">http://127.0.0.1:8080/login</a></p>
+<p>场景四：<br>location /admin {<br>    proxy_pass <a target="_blank" rel="noopener" href="http://127.0.0.1:8080/">http://127.0.0.1:8080/</a>;<br>}<br>代理后实际访问地址：<a target="_blank" rel="noopener" href="http://127.0.0.1:8080//login">http://127.0.0.1:8080//login</a></p>
+<p>proxy_pass配置中url末尾不带/时，如url中不包含path，则直接将原uri拼接在proxy_pass中url之后；如url中包含path，则将原uri去除location匹配表达式后的内容拼接在proxy_pass中的url之后。</p>
+<p> 测试地址：<a target="_blank" rel="noopener" href="http://127.0.0.1/admin/login">http://127.0.0.1/admin/login</a></p>
+<p> 场景一：<br> location /admin/{<br>    proxy_pass <a target="_blank" rel="noopener" href="http://127.0.0.1:8080/server">http://127.0.0.1:8080/server</a>;<br> }</p>
+<p>代理后实际访问地址：<a target="_blank" rel="noopener" href="http://127.0.0.1:8080/serverlogin">http://127.0.0.1:8080/serverlogin</a></p>
+<p>场景二：<br>location /admin {<br>    proxy_pass <a target="_blank" rel="noopener" href="http://127.0.0.1:8080/server">http://127.0.0.1:8080/server</a>;<br>}<br>代理后实际访问地址：<a target="_blank" rel="noopener" href="http://127.0.0.1:8080/server/login">http://127.0.0.1:8080/server/login</a></p>
+<p>场景三：<br>location /admin/ {<br>    proxy_pass <a target="_blank" rel="noopener" href="http://127.0.0.1:8080">http://127.0.0.1:8080</a>;<br>}<br>代理后实际访问地址：<a target="_blank" rel="noopener" href="http://127.0.0.1:8080/admin/login">http://127.0.0.1:8080/admin/login</a></p>
+<p>场景四：<br>location /admin {<br>    proxy_pass <a target="_blank" rel="noopener" href="http://127.0.0.1:8080">http://127.0.0.1:8080</a>;<br>}<br>代理后实际访问地址：<a target="_blank" rel="noopener" href="http://127.0.0.1:8080/admin/login">http://127.0.0.1:8080/admin/login</a></p>
+<p><a target="_blank" rel="noopener" href="http://hxd.best/2019/05/15/Nginx-%E5%86%85%E5%AE%B9%E7%BC%93%E5%AD%98%E5%8F%8A%E5%B8%B8%E8%A7%81%E5%8F%82%E6%95%B0%E9%85%8D%E7%BD%AE/">Nginx 内容缓存及常见参数配置</a></p>
+<p><a target="_blank" rel="noopener" href="https://learnku.com/articles/36857">Nginx 代理缓存</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.qttc.net/355-nginx-proxy-cache-not-working.html">Nginx配置proxy_cache后缓存目录里没有生成缓存文件</a></p>
+<p>代理缓存主要用到 proxy 模块中的 proxy_cache</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">proxy_cache_path &#x2F;var&#x2F;cache&#x2F;nginx levels&#x3D;1:2 keys_zone&#x3D;my_cache:10m max_size&#x3D;10g inactive&#x3D;30d use_temp_path&#x3D;off;
+
+    server &#123;
+        server_name localhost;
+        location &#x2F; &#123;
+            proxy_cache my_cache;
+            proxy_cache_valid  200;
+            proxy_pass https:&#x2F;&#x2F;remote.com;
+        &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+
+<p><a target="_blank" rel="noopener" href="https://www.xncoding.com/2018/03/12/fullstack/nginx-websocket.html">nginx反向代理WebSocket</a></p>
+<p>nginx 重定向不添加端口</p>
+<figure><div class="code-wrapper"><pre class="language-none"><code class="language-none">absolute_redirect off;</code></pre></div></figure><p><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/3adcb8b931a3">nginx配置指令absolute_redirect、port_in_redirect、server_name_in_redirect详解</a></p>
+
+
+  
+
+</article>
+
+
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
