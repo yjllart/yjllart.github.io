@@ -1,0 +1,360 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=dark>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Youj">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="【PDA移动端】：1、零头扫码：弹出输入数量，操作按钮：部分出库、全部出库，点击部分出库，则整垛数据依然在预制码表中存放，点击全部出库，则将整垛移到成品码表中。2、跨区调拨：将成品码表相同结构生成一个调拨码表，专门存放调拨的码数据，此数据可以支持二次出库给经销商，出库给经销商后，则转移到成品码表，同时将调拨码表中的数据清理掉，直至全部出完为止。 【管理端】：1、零头确认出库：对于零头垛未出库的，可">
+<meta property="og:type" content="website">
+<meta property="og:title" content="page.title">
+<meta property="og:url" content="http://blog.yjll.blog/unpost/%E9%9B%B6%E5%A4%B4%E5%87%BA%E5%BA%93%E6%96%B9%E6%A1%88.html">
+<meta property="og:site_name" content="Youj&#39;s blog">
+<meta property="og:description" content="【PDA移动端】：1、零头扫码：弹出输入数量，操作按钮：部分出库、全部出库，点击部分出库，则整垛数据依然在预制码表中存放，点击全部出库，则将整垛移到成品码表中。2、跨区调拨：将成品码表相同结构生成一个调拨码表，专门存放调拨的码数据，此数据可以支持二次出库给经销商，出库给经销商后，则转移到成品码表，同时将调拨码表中的数据清理掉，直至全部出完为止。 【管理端】：1、零头确认出库：对于零头垛未出库的，可">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-12-21T10:16:32.754Z">
+<meta property="article:modified_time" content="2024-12-21T10:16:32.754Z">
+<meta property="article:author" content="Youj">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>page.title - Youj&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"blog.yjll.blog","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null},"gtag":null,"woyaola":null,"cnzz":null},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 5.4.2"><link rel="alternate" href="/atom.xml" title="Youj's blog" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 60vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Youj&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="page.title"></span>
+          
+        </div>
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      <div class="container nopadding-x-md">
+        <div id="board"
+          >
+          
+          <div class="container">
+            <div class="row">
+              <div class="col-12 col-md-10 m-auto">
+                
+
+<article class="page-content">
+  <p>【PDA移动端】：<br>1、零头扫码：弹出输入数量，操作按钮：部分出库、全部出库，点击部分出库，则整垛数据依然在预制码表中存放，点击全部出库，则将整垛移到成品码表中。<br>2、跨区调拨：将成品码表相同结构生成一个调拨码表，专门存放调拨的码数据，此数据可以支持二次出库给经销商，出库给经销商后，则转移到成品码表，同时将调拨码表中的数据清理掉，直至全部出完为止。</p>
+<p>【管理端】：<br>1、零头确认出库：对于零头垛未出库的，可以列出来，由管理端补充点击出库。<br>2、新版统计：增加零头统计的单独功能，不与原出库单合并显示。出库单统计的数据都是一码一单，零头统计的是一垛多单（多客户）<br>3、品项同步：对于调拨的品项需要提前给到对方（过渡方案，不进行同步），技术无须做开发</p>
+<p>【溯源】：<br>适应新版的零头和调拨数据溯源<br>     1）零头<br>          显示单号、经销商名称+编码、时间、数量<br>     2）调拨<br>          显示单号、调出厂、调入厂、时间、数量（所在单号该品项的合计数）</p>
+<h2 id="PDA端操作"><a href="#PDA端操作" class="headerlink" title="PDA端操作"></a>PDA端操作</h2><p>1 扫零头填数量</p>
+<p>每次提交的零头数据，保存到business_outbound_fractional_log中，更新business_outbound_list表增加对应的品项数量。<br>如果全部出库更新business_outbound_fractional_log中这垛的状态为已出库，并将整垛的码移到business_code_finished中，成品码表中记录提交时间，不记录出库单ID。</p>
+<p>散件组垛和剔除操作不能对零头垛进行操作，接口层面需要做限制。<br>调拨单不允许扫零头。</p>
+<p>2 提交出库<br>更新business_outbound状态，零头数量根据business_outbound_fractional_log汇总，整单扫码数量根据business_outbound_list汇总。<br>只移动整垛扫的码到成品码表，对零头垛的码不做变更。</p>
+<p>3 调拨出库<br>将成品码表相同结构生成一个调拨码表，专门存放调拨的码数据，此数据可以支持二次出库给经销商，出库给经销商后，则转移到成品码表，同时将调拨码表中的数据清理掉，直至全部出完为止。</p>
+<h2 id="后台"><a href="#后台" class="headerlink" title="后台"></a>后台</h2><p>1 零头确认出库<br>根据business_outbound_fractional_log表查出未出库的零头垛，显示品项、垛码、零头数量汇总、二采数量、最后一次扫码时间。<br>确认出库后，更新business_outbound_fractional_log表状态为已出库，同时将整垛的码移到business_code_finished中，成品码表中记录提交时间，不记录出库单ID。</p>
+<p>2 零头统计<br>零头统计的是一垛多单（多客户），页面可根据扫码时间、垛码、品项、客户名称查到具体的垛，显示这垛的所有出库单号、客户名称、出库数量、扫码时间。</p>
+<h2 id="溯源"><a href="#溯源" class="headerlink" title="溯源"></a>溯源</h2><p>1 零头<br>从business_code_finished表查询出具体的垛码，再根据垛码从business_outbound_fractional_log中查出多个出库单信息。</p>
+<p>2 调拨<br>现有的程序满足调拨查询，如果调入方水厂没有进行出库，需要多查询一下新建的business_code_transfers表。</p>
+
+
+  
+
+</article>
+
+
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
