@@ -1,0 +1,767 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=dark>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+    <link rel="canonical" href="https://blog.yjll.site/post/96f462f9.html"/>
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="简斋">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="计算机的世界中，缓存无处不在，最常见的如CPU高速缓存，CPU Cache是用于减少处理器访问内存所需平均时间的部件。在金字塔式存储体系中它位于自顶向下的第二层，仅次于CPU寄存器。其容量远小于内存，但速度却可以接近处理器的频率。 当处理器发出内存访问请求时，会先查看缓存内是否有请求数据。如果存在（命中），则不经访问内存直接返回该数据；如果不存在（失效），则要先把内存中的相应数据载入缓存，再将其返">
+<meta property="og:type" content="article">
+<meta property="og:title" content="漫谈Guava之Cache（一）">
+<meta property="og:url" content="https://blog.yjll.site/post/96f462f9.html">
+<meta property="og:site_name" content="简斋">
+<meta property="og:description" content="计算机的世界中，缓存无处不在，最常见的如CPU高速缓存，CPU Cache是用于减少处理器访问内存所需平均时间的部件。在金字塔式存储体系中它位于自顶向下的第二层，仅次于CPU寄存器。其容量远小于内存，但速度却可以接近处理器的频率。 当处理器发出内存访问请求时，会先查看缓存内是否有请求数据。如果存在（命中），则不经访问内存直接返回该数据；如果不存在（失效），则要先把内存中的相应数据载入缓存，再将其返">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-03-27T15:40:24.000Z">
+<meta property="article:modified_time" content="2025-10-17T01:56:21.705Z">
+<meta property="article:author" content="简斋">
+<meta property="article:tag" content="Guava">
+<meta property="article:tag" content="Cache">
+<meta property="article:tag" content="缓存">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>漫谈Guava之Cache（一） - 简斋</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/prism/1.26.0/plugins/line-numbers/prism-line-numbers.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"blog.yjll.site","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null},"gtag":null,"woyaola":null,"cnzz":null},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 5.4.2"><link rel="alternate" href="/atom.xml" title="简斋" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>简斋</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="漫谈Guava之Cache（一）"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2020-03-27 15:40" pubdate>
+          2020年3月27日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          990 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          9 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">漫谈Guava之Cache（一）</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>计算机的世界中，缓存无处不在，最常见的如CPU高速缓存，<code>CPU Cache</code>是用于减少<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/中央处理器">处理器</a>访问内存所需平均时间的部件。在金字塔式<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/w/index.php?title=存储体系&action=edit&redlink=1">存储体系</a>中它位于自顶向下的第二层，仅次于<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/寄存器">CPU寄存器</a>。其容量远小于<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/内存">内存</a>，但速度却可以接近处理器的频率。</p>
+<p>当处理器发出内存访问请求时，会先查看缓存内是否有请求数据。如果存在（命中），则不经访问内存直接返回该数据；如果不存在（失效），则要先把内存中的相应数据载入缓存，再将其返回处理器。</p>
+<p>这和我们日常开发中的很多场景相似，例如调用第三方接口取数据，微服务间取数据，甚至从数据库中取数据。这些IO操作所消耗的时间对于CPU来说是很久的。如果这些数据是读多写少，也就是说数据不会轻易改变，那我们可以把这部分数据进行缓存，取数据前先访问缓存，在缓存中查不到时再走原来的逻辑。</p>
+<span id="more"></span>
+
+<p>日常开发中我们可能会使用<code>ConcurrentHashMap</code>存数据，替代缓存使用，简单场景这样使用没什么问题，只是<code>ConcurrentHashMap</code>设计的目的不是做缓存，所以很多Cache应该有的很多功能，<code>ConcurrentHashMap</code>并不直接支持，类如设置key的过期时间，内存不足时释放缓存等。</p>
+<p>本文介绍Guava的Cache使用，为该系列的第一部分。</p>
+<p>我先写一个简单的例子，创建一个缓存，该缓存最多存100个元素，超时时间为10分钟</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token class-name">Cache</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">String</span><span class="token punctuation">,</span> <span class="token class-name">String</span><span class="token punctuation">></span></span> cache <span class="token operator">=</span> <span class="token class-name">CacheBuilder</span><span class="token punctuation">.</span><span class="token function">newBuilder</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+            <span class="token punctuation">.</span><span class="token function">maximumSize</span><span class="token punctuation">(</span><span class="token number">100</span><span class="token punctuation">)</span>
+            <span class="token punctuation">.</span><span class="token function">expireAfterWrite</span><span class="token punctuation">(</span><span class="token number">10</span><span class="token punctuation">,</span> <span class="token class-name">TimeUnit</span><span class="token punctuation">.</span><span class="token constant">MINUTES</span><span class="token punctuation">)</span>
+            <span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+cache<span class="token punctuation">.</span><span class="token function">getIfPresent</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span>
+
+cache<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>key<span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-></span> defaultValue<span class="token punctuation">)</span>            
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<h3 id="CacheLoader"><a href="#CacheLoader" class="headerlink" title="CacheLoader"></a>CacheLoader</h3><p>上文中的<code>cache.get(key, () -&gt; defaultValue)</code>会在<code>cache</code>中没这条数据的情况下，根据我们写的策略重新计算，并将数据保存在缓存中一份。对于这种情况可以使用<code>CacheLoader</code>来统一处理。</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token class-name">LoadingCache</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Key</span><span class="token punctuation">,</span> <span class="token class-name">Graph</span><span class="token punctuation">></span></span> graphs <span class="token operator">=</span> <span class="token class-name">CacheBuilder</span><span class="token punctuation">.</span><span class="token function">newBuilder</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+      <span class="token punctuation">.</span><span class="token function">expireAfterAccess</span><span class="token punctuation">(</span><span class="token number">10</span><span class="token punctuation">,</span> <span class="token class-name">TimeUnit</span><span class="token punctuation">.</span><span class="token constant">MINUTES</span><span class="token punctuation">)</span>
+      <span class="token punctuation">.</span><span class="token function">maximumSize</span><span class="token punctuation">(</span><span class="token number">1000</span><span class="token punctuation">)</span>
+      <span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span>
+          <span class="token keyword">new</span> <span class="token class-name">CacheLoader</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Key</span><span class="token punctuation">,</span> <span class="token class-name">Graph</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">public</span> <span class="token class-name">Graph</span> <span class="token function">load</span><span class="token punctuation">(</span><span class="token class-name">Key</span> key<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span> <span class="token comment">// no checked exception</span>
+              <span class="token keyword">return</span> <span class="token function">createExpensiveGraph</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span>
+          <span class="token punctuation">&#125;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token keyword">return</span> graphs<span class="token punctuation">.</span><span class="token function">getUnchecked</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+
+
+<h2 id="三种淘汰策略"><a href="#三种淘汰策略" class="headerlink" title="三种淘汰策略"></a>三种淘汰策略</h2><blockquote>
+<p>Guava provides three basic types of eviction: size-based eviction, time-based eviction, and reference-based eviction.</p>
+</blockquote>
+<h3 id="容量大小"><a href="#容量大小" class="headerlink" title="容量大小"></a>容量大小</h3><p>前文使用的<code>CacheBuilder.maximumSize(long)</code> 便可限制最大缓存数量。<br>如缓冲的每条数据有不同的权重的话可自己写<code>Weigher</code>策略，并设置最大<code>重量</code>。</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token class-name">LoadingCache</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Key</span><span class="token punctuation">,</span> <span class="token class-name">Graph</span><span class="token punctuation">></span></span> graphs <span class="token operator">=</span> <span class="token class-name">CacheBuilder</span><span class="token punctuation">.</span><span class="token function">newBuilder</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+       <span class="token punctuation">.</span><span class="token function">maximumWeight</span><span class="token punctuation">(</span><span class="token number">100000</span><span class="token punctuation">)</span>
+       <span class="token punctuation">.</span><span class="token function">weigher</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">Weigher</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Key</span><span class="token punctuation">,</span> <span class="token class-name">Graph</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+          <span class="token keyword">public</span> <span class="token keyword">int</span> <span class="token function">weigh</span><span class="token punctuation">(</span><span class="token class-name">Key</span> k<span class="token punctuation">,</span> <span class="token class-name">Graph</span> g<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">return</span> g<span class="token punctuation">.</span><span class="token function">vertices</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+          <span class="token punctuation">&#125;</span>
+        <span class="token punctuation">&#125;</span><span class="token punctuation">)</span>
+       <span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span>
+           <span class="token keyword">new</span> <span class="token class-name">CacheLoader</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Key</span><span class="token punctuation">,</span> <span class="token class-name">Graph</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+             <span class="token keyword">public</span> <span class="token class-name">Graph</span> <span class="token function">load</span><span class="token punctuation">(</span><span class="token class-name">Key</span> key<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span> <span class="token comment">// no checked exception</span>
+               <span class="token keyword">return</span> <span class="token function">createExpensiveGraph</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span><span class="token punctuation">;</span>
+             <span class="token punctuation">&#125;</span>
+           <span class="token punctuation">&#125;</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<h3 id="时间"><a href="#时间" class="headerlink" title="时间"></a>时间</h3><p><code>CacheBuilder</code> provides two approaches to timed eviction:</p>
+<ul>
+<li><code>expireAfterAccess(long, TimeUnit)</code> 读或写多长时间后，缓存失效</li>
+<li><code>expireAfterWrite(long, TimeUnit)</code> 值更改后多长时间后，缓存失效</li>
+</ul>
+<h3 id="引用"><a href="#引用" class="headerlink" title="引用"></a>引用</h3><p>使用JVM的垃圾回收，可被动的缓存失效。</p>
+<ul>
+<li><code>CacheBuilder.weakKeys()</code> 对key使用弱引用包装</li>
+<li><code>CacheBuilder.weakValues()</code> 对value使用弱引用包装</li>
+<li><code>CacheBuilder.softValues()</code> 对soft使用软引用包装</li>
+</ul>
+<h2 id="Removal-Listeners"><a href="#Removal-Listeners" class="headerlink" title="Removal Listeners"></a>Removal Listeners</h2><p>如果我们想对淘汰的元素进行处理，我们可以写一个<code>RemovalListener</code>对Cache进行监听。例如我们将DB连接存入cache中，当缓存失效时，我们需要关闭数据库连接，这部分逻辑就可以通过<code>RemovalListener</code>来完成</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token class-name">CacheLoader</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Key</span><span class="token punctuation">,</span> <span class="token class-name">DatabaseConnection</span><span class="token punctuation">></span></span> loader <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">CacheLoader</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Key</span><span class="token punctuation">,</span> <span class="token class-name">DatabaseConnection</span><span class="token punctuation">></span></span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+  <span class="token keyword">public</span> <span class="token class-name">DatabaseConnection</span> <span class="token function">load</span><span class="token punctuation">(</span><span class="token class-name">Key</span> key<span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">Exception</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">return</span> <span class="token function">openConnection</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span class="token punctuation">;</span>
+<span class="token class-name">RemovalListener</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Key</span><span class="token punctuation">,</span> <span class="token class-name">DatabaseConnection</span><span class="token punctuation">></span></span> removalListener <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">RemovalListener</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Key</span><span class="token punctuation">,</span> <span class="token class-name">DatabaseConnection</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+  <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">onRemoval</span><span class="token punctuation">(</span><span class="token class-name">RemovalNotification</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Key</span><span class="token punctuation">,</span> <span class="token class-name">DatabaseConnection</span><span class="token punctuation">></span></span> removal<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token class-name">DatabaseConnection</span> conn <span class="token operator">=</span> removal<span class="token punctuation">.</span><span class="token function">getValue</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    conn<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// tear down properly</span>
+  <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span class="token punctuation">;</span>
+
+<span class="token class-name">CacheBuilder</span><span class="token punctuation">.</span><span class="token function">newBuilder</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+  <span class="token punctuation">.</span><span class="token function">expireAfterWrite</span><span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">,</span> <span class="token class-name">TimeUnit</span><span class="token punctuation">.</span><span class="token constant">MINUTES</span><span class="token punctuation">)</span>
+  <span class="token punctuation">.</span><span class="token function">removalListener</span><span class="token punctuation">(</span>removalListener<span class="token punctuation">)</span>
+  <span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span>loader<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<h2 id="Refresh"><a href="#Refresh" class="headerlink" title="Refresh"></a>Refresh</h2><p>对于失效性比较强的元素，我们可以配置刷新的策略。刷新和淘汰不同，刷新元素是可以是异步操作，刷新未完成时返回还是原数据，刷新成功则返回新数据。</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// Some keys don't need refreshing, and we want refreshes to be done asynchronously.</span>
+<span class="token class-name">LoadingCache</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Key</span><span class="token punctuation">,</span> <span class="token class-name">Graph</span><span class="token punctuation">></span></span> graphs <span class="token operator">=</span> <span class="token class-name">CacheBuilder</span><span class="token punctuation">.</span><span class="token function">newBuilder</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+       <span class="token punctuation">.</span><span class="token function">maximumSize</span><span class="token punctuation">(</span><span class="token number">1000</span><span class="token punctuation">)</span>
+       <span class="token punctuation">.</span><span class="token function">refreshAfterWrite</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token class-name">TimeUnit</span><span class="token punctuation">.</span><span class="token constant">MINUTES</span><span class="token punctuation">)</span>
+       <span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span>
+           <span class="token keyword">new</span> <span class="token class-name">CacheLoader</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Key</span><span class="token punctuation">,</span> <span class="token class-name">Graph</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+             <span class="token keyword">public</span> <span class="token class-name">Graph</span> <span class="token function">load</span><span class="token punctuation">(</span><span class="token class-name">Key</span> key<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span> <span class="token comment">// no checked exception</span>
+               <span class="token keyword">return</span> <span class="token function">getGraphFromDatabase</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span><span class="token punctuation">;</span>
+             <span class="token punctuation">&#125;</span>
+
+             <span class="token keyword">public</span> <span class="token class-name">ListenableFuture</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Graph</span><span class="token punctuation">></span></span> <span class="token function">reload</span><span class="token punctuation">(</span><span class="token keyword">final</span> <span class="token class-name">Key</span> key<span class="token punctuation">,</span> <span class="token class-name">Graph</span> prevGraph<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+               <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">neverNeedsRefresh</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                 <span class="token keyword">return</span> <span class="token class-name">Futures</span><span class="token punctuation">.</span><span class="token function">immediateFuture</span><span class="token punctuation">(</span>prevGraph<span class="token punctuation">)</span><span class="token punctuation">;</span>
+               <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+                 <span class="token comment">// asynchronous!</span>
+                 <span class="token class-name">ListenableFutureTask</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Graph</span><span class="token punctuation">></span></span> task <span class="token operator">=</span> <span class="token class-name">ListenableFutureTask</span><span class="token punctuation">.</span><span class="token function">create</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">Callable</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Graph</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                   <span class="token keyword">public</span> <span class="token class-name">Graph</span> <span class="token function">call</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                     <span class="token keyword">return</span> <span class="token function">getGraphFromDatabase</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                   <span class="token punctuation">&#125;</span>
+                 <span class="token punctuation">&#125;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                 executor<span class="token punctuation">.</span><span class="token function">execute</span><span class="token punctuation">(</span>task<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                 <span class="token keyword">return</span> task<span class="token punctuation">;</span>
+               <span class="token punctuation">&#125;</span>
+             <span class="token punctuation">&#125;</span>
+           <span class="token punctuation">&#125;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Java/" class="category-chain-item">Java</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Guava/" class="print-no-link">#Guava</a>
+      
+        <a href="/tags/Cache/" class="print-no-link">#Cache</a>
+      
+        <a href="/tags/%E7%BC%93%E5%AD%98/" class="print-no-link">#缓存</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>漫谈Guava之Cache（一）</div>
+      <div>https://blog.yjll.site/post/96f462f9.html</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>简斋</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2020年3月27日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/post/a6e28e21.html" title="漫谈Guava之Cache（二）">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">漫谈Guava之Cache（二）</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/post/c7e397c2.html" title="Spring Cloud Gateway 分布式限流">
+                        <span class="hidden-mobile">Spring Cloud Gateway 分布式限流</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.0/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script  src="https://lib.baomitu.com/prism/1.26.0/plugins/line-numbers/prism-line-numbers.min.js" ></script>
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

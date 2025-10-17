@@ -1,0 +1,793 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=dark>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+    <link rel="canonical" href="https://blog.yjll.site/post/38378326.html"/>
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="简斋">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="​    日常开发中经常会出现一瞬间接口被超频次访问的这种情况，例如电商秒杀活动，定点抢红包等。短时间高并发可能会拖慢系统的响应速度，引起网络超时，一个服务不可用进而影响其他服务也不可用，甚至导致雪崩。 ​    限流是最直接有效的控制手段，将系统处理不过来的请求拦截在核心逻辑之外。限流器实现方法有漏桶算法(Leaky Bucket),令牌桶算法(Token Bucket)&#96;等。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="漫谈限流器">
+<meta property="og:url" content="https://blog.yjll.site/post/38378326.html">
+<meta property="og:site_name" content="简斋">
+<meta property="og:description" content="​    日常开发中经常会出现一瞬间接口被超频次访问的这种情况，例如电商秒杀活动，定点抢红包等。短时间高并发可能会拖慢系统的响应速度，引起网络超时，一个服务不可用进而影响其他服务也不可用，甚至导致雪崩。 ​    限流是最直接有效的控制手段，将系统处理不过来的请求拦截在核心逻辑之外。限流器实现方法有漏桶算法(Leaky Bucket),令牌桶算法(Token Bucket)&#96;等。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img.yjll.site/img/20200327141557.png">
+<meta property="article:published_time" content="2020-03-24T15:40:24.000Z">
+<meta property="article:modified_time" content="2025-10-17T01:56:21.705Z">
+<meta property="article:author" content="简斋">
+<meta property="article:tag" content="limiter">
+<meta property="article:tag" content="Guava">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://img.yjll.site/img/20200327141557.png">
+  
+  
+  
+  <title>漫谈限流器 - 简斋</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/prism/1.26.0/plugins/line-numbers/prism-line-numbers.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"blog.yjll.site","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null},"gtag":null,"woyaola":null,"cnzz":null},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 5.4.2"><link rel="alternate" href="/atom.xml" title="简斋" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>简斋</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="漫谈限流器"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2020-03-24 15:40" pubdate>
+          2020年3月24日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          1.4k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          13 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">漫谈限流器</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>​    日常开发中经常会出现一瞬间接口被超频次访问的这种情况，例如电商秒杀活动，定点抢红包等。短时间高并发可能会拖慢系统的响应速度，引起网络超时，一个服务不可用进而影响其他服务也不可用，甚至导致雪崩。</p>
+<p>​    限流是最直接有效的控制手段，将系统处理不过来的请求拦截在核心逻辑之外。限流器实现方法有<code>漏桶算法(Leaky Bucket),</code>令牌桶算法(Token Bucket)`等。</p>
+<span id="more"></span>
+
+<ul>
+<li>漏斗算法 理解起来比较简单，水(即请求)流入固定大小的漏斗内，漏斗也已一定的速度流出水，当水满时停止流入,进行限流。</li>
+<li>令牌桶算法 同样是固定大小的桶，定期往桶中投令牌，有新请求时需从桶中取令牌，当桶中无令牌可取时，则拒绝。</li>
+</ul>
+<p>本文使用<code>Guava</code>中的<code>RateLimiter</code>进行限流，我使用的Guava的版本为<code>28.2-jre</code>，不同版本api可能略有偏差。</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-java" data-language="java"><code class="language-java">
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">GuavaLimiterDemo</span> <span class="token punctuation">&#123;</span>
+
+    <span class="token comment">// 每秒生成2个令牌</span>
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token class-name">RateLimiter</span> rateLimiter <span class="token operator">=</span> <span class="token class-name">RateLimiter</span><span class="token punctuation">.</span><span class="token function">create</span><span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span><span class="token keyword">throws</span> <span class="token class-name">InterruptedException</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">ExecutorService</span> executorService <span class="token operator">=</span> <span class="token class-name">Executors</span><span class="token punctuation">.</span><span class="token function">newFixedThreadPool</span><span class="token punctuation">(</span><span class="token number">100</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment">// 5个线程同时调用，模拟多个请求同时访问</span>
+        <span class="token class-name">IntStream</span><span class="token punctuation">.</span><span class="token function">rangeClosed</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">5</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">forEach</span><span class="token punctuation">(</span>e <span class="token operator">-></span> <span class="token punctuation">&#123;</span>
+            executorService<span class="token punctuation">.</span><span class="token function">submit</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-></span> <span class="token function">acquire</span><span class="token punctuation">(</span>e<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">double</span> <span class="token function">acquire</span><span class="token punctuation">(</span><span class="token keyword">int</span> i<span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        <span class="token comment">// acquire方法默认取一个令牌，桶中令牌不够的话会阻塞线程,返回值为线程阻塞时间</span>
+        <span class="token keyword">double</span> acquire <span class="token operator">=</span> rateLimiter<span class="token punctuation">.</span><span class="token function">acquire</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"当前系统时间:%s,等待秒数:%s\n"</span><span class="token punctuation">,</span><span class="token class-name">LocalDateTime</span><span class="token punctuation">.</span><span class="token function">now</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>acquire<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> acquire<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<p>​    调用静态方法<code>create()</code>创建限流器,参数为每秒生产令牌的数量</p>
+<p>​    <code>acquire()</code>方法默认取一个令牌，可用调用重载的方法取多个令牌，如果桶中无令牌该方法会阻塞，开发过程中要注意大量线程挂起的问题，慎用。</p>
+<p>​    <code>tryAcquire()</code>方法可解决上述问题，取一个令牌，如桶中无令牌直接返回false。<br><code>tryAcquire(int permits, long timeout, TimeUnit unit)</code>可传入超时时间，超过这段时间桶中还是无令牌可取的话返回false。</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">当前系统时间:2020-03-25T13:30:37.757,等待秒数:0.0
+当前系统时间:2020-03-25T13:30:38.195,等待秒数:0.458741
+当前系统时间:2020-03-25T13:30:38.694,等待秒数:0.958729
+当前系统时间:2020-03-25T13:30:39.194,等待秒数:1.458717
+当前系统时间:2020-03-25T13:30:39.695,等待秒数:1.958704<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<p>​    这是控制台打印的结果，每秒放入两个令牌的桶，同时有5个线程访问。基本每0.5秒放行一个请求。</p>
+<h3 id="Guava-RateLimiter-实现原理"><a href="#Guava-RateLimiter-实现原理" class="headerlink" title="Guava RateLimiter 实现原理"></a>Guava RateLimiter 实现原理</h3><p><img src="https://img.yjll.site/img/20200327141557.png" srcset="/img/loading.gif" lazyload alt=""></p>
+<p>​    RateLimiter限流器实现了两种算法<code>SmoothWarmingUp(漏斗算法)</code>和<code>SmoothBursty(令牌桶算法)</code>，默认使用<code>SmoothBursty</code>。</p>
+<p>​    静态方法<code>RateLimiter.create()</code>默认使用子类<code>SmoothBursty</code>创建限流器</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// permitsPerSecond 创建时传入的单位时间内发放令牌数量</span>
+<span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token class-name">RateLimiter</span> <span class="token function">create</span><span class="token punctuation">(</span><span class="token keyword">double</span> permitsPerSecond<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">return</span> <span class="token function">create</span><span class="token punctuation">(</span>permitsPerSecond<span class="token punctuation">,</span> <span class="token class-name">SleepingStopwatch</span><span class="token punctuation">.</span><span class="token function">createFromSystemTimer</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+<span class="token comment">// stopwatch guava实现的时间监视器 默认SleepingStopwatch.createFromSystemTimer()</span>
+<span class="token keyword">static</span> <span class="token class-name">RateLimiter</span> <span class="token function">create</span><span class="token punctuation">(</span><span class="token keyword">double</span> permitsPerSecond<span class="token punctuation">,</span> <span class="token class-name">SleepingStopwatch</span> stopwatch<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token comment">// maxBurstSeconds 最大缓存时间，默认1.0</span>
+    <span class="token class-name">RateLimiter</span> rateLimiter <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">SmoothBursty</span><span class="token punctuation">(</span>stopwatch<span class="token punctuation">,</span> <span class="token number">1.0</span> <span class="token comment">/* maxBurstSeconds */</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token comment">// 初始化时设置投放令牌的速率</span>
+    rateLimiter<span class="token punctuation">.</span><span class="token function">setRate</span><span class="token punctuation">(</span>permitsPerSecond<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span> rateLimiter<span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<p>​    <code>setRate</code>底层调用<code>doSetRate</code>设置速率</p>
+<p>​    <code>setRate</code>为设置投放令牌的速率，调用时对以下值进行更改：</p>
+<ul>
+<li><p>storedPermits 当前令牌数量，速率更改时会根据新旧速率的比例对原桶中令牌的数量进行更改。初始化时为0</p>
+</li>
+<li><p>stableIntervalMicros 每生产一个令牌需要的毫秒数</p>
+</li>
+<li><p>maxPermits 桶中最多可存储的令牌数量，可根据maxBurstSeconds * permitsPerSecond 计算</p>
+</li>
+<li><p>nextFreeTicketMicros 下一次可取令牌的时间，当前时间早于该时间表示可取元素，与之的差表示放入令牌且不取出令牌的时间，进而再跟据stableIntervalMicros可算出该时间段内桶中增加了多少令牌(受限于桶的大小)</p>
+</li>
+</ul>
+<p>​    在初始化时或手动更改速率时调用。</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// permitsPerSecond 创建时传入的单位时间内发放令牌数量</span>
+<span class="token comment">// nowMicros 从创建到现在经过的时间</span>
+<span class="token keyword">final</span> <span class="token keyword">void</span> <span class="token function">doSetRate</span><span class="token punctuation">(</span><span class="token keyword">double</span> permitsPerSecond<span class="token punctuation">,</span> <span class="token keyword">long</span> nowMicros<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token function">resync</span><span class="token punctuation">(</span>nowMicros<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">double</span> stableIntervalMicros <span class="token operator">=</span> <span class="token constant">SECONDS</span><span class="token punctuation">.</span><span class="token function">toMicros</span><span class="token punctuation">(</span><span class="token number">1L</span><span class="token punctuation">)</span> <span class="token operator">/</span> permitsPerSecond<span class="token punctuation">;</span>
+    <span class="token keyword">this</span><span class="token punctuation">.</span>stableIntervalMicros <span class="token operator">=</span> stableIntervalMicros<span class="token punctuation">;</span>
+    <span class="token function">doSetRate</span><span class="token punctuation">(</span>permitsPerSecond<span class="token punctuation">,</span> stableIntervalMicros<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+<span class="token comment">// stableIntervalMicros 每生产一个令牌，需要经过多少毫秒</span>
+<span class="token keyword">void</span> <span class="token function">doSetRate</span><span class="token punctuation">(</span><span class="token keyword">double</span> permitsPerSecond<span class="token punctuation">,</span> <span class="token keyword">double</span> stableIntervalMicros<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+      <span class="token keyword">double</span> oldMaxPermits <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>maxPermits<span class="token punctuation">;</span>
+      maxPermits <span class="token operator">=</span> maxBurstSeconds <span class="token operator">*</span> permitsPerSecond<span class="token punctuation">;</span>
+      <span class="token keyword">if</span> <span class="token punctuation">(</span>oldMaxPermits <span class="token operator">==</span> <span class="token class-name">Double</span><span class="token punctuation">.</span><span class="token constant">POSITIVE_INFINITY</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token comment">// if we don't special-case this, we would get storedPermits == NaN, below</span>
+        storedPermits <span class="token operator">=</span> maxPermits<span class="token punctuation">;</span>
+      <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+        storedPermits <span class="token operator">=</span>
+            <span class="token punctuation">(</span>oldMaxPermits <span class="token operator">==</span> <span class="token number">0.0</span><span class="token punctuation">)</span>
+                <span class="token operator">?</span> <span class="token number">0.0</span> <span class="token comment">// initial state</span>
+                <span class="token operator">:</span> storedPermits <span class="token operator">*</span> maxPermits <span class="token operator">/</span> oldMaxPermits<span class="token punctuation">;</span>
+      <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<p>​    速率更改或者从桶中取令牌时会调用<code>resync</code>方法</p>
+<p>​    <code>resync(nowMicros)</code>将当前时间与<code>nextFreeTicketMicros</code>作比较，如当前时间在<code>nextFreeTicketMicros</code>之后，则重新计算桶中令牌的数量，并重置<code>nextFreeTicketMicros</code>的值。从这里可以看出Guava Limiter设计的绝妙之处，不需要单独开线程向桶中添加令牌，而是惰性的在取令牌时计算一下这时间内桶中添加了几个令牌，在根据桶中令牌数量进行限流。</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">void</span> <span class="token function">resync</span><span class="token punctuation">(</span><span class="token keyword">long</span> nowMicros<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+  <span class="token comment">// if nextFreeTicket is in the past, resync to now</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>nowMicros <span class="token operator">></span> nextFreeTicketMicros<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">double</span> newPermits <span class="token operator">=</span> <span class="token punctuation">(</span>nowMicros <span class="token operator">-</span> nextFreeTicketMicros<span class="token punctuation">)</span> <span class="token operator">/</span> <span class="token function">coolDownIntervalMicros</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token comment">// 防止添加后的令牌数量超过桶的极限</span>
+    storedPermits <span class="token operator">=</span> <span class="token function">min</span><span class="token punctuation">(</span>maxPermits<span class="token punctuation">,</span> storedPermits <span class="token operator">+</span> newPermits<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    nextFreeTicketMicros <span class="token operator">=</span> nowMicros<span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<p>​    取数据调用<code>acquire()</code>方法，桶中无令牌的话会阻塞</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">double</span> <span class="token function">acquire</span><span class="token punctuation">(</span><span class="token keyword">int</span> <span class="token keyword">permits</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+  <span class="token comment">// 需等待的时间</span>
+  <span class="token keyword">long</span> microsToWait <span class="token operator">=</span> <span class="token function">reserve</span><span class="token punctuation">(</span><span class="token keyword">permits</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token comment">// 线程挂起</span>
+  stopwatch<span class="token punctuation">.</span><span class="token function">sleepMicrosUninterruptibly</span><span class="token punctuation">(</span>microsToWait<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">return</span> <span class="token number">1.0</span> <span class="token operator">*</span> microsToWait <span class="token operator">/</span> <span class="token constant">SECONDS</span><span class="token punctuation">.</span><span class="token function">toMicros</span><span class="token punctuation">(</span><span class="token number">1L</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<p>​    <code>acquire()</code>最终会调用<code>reserveEarliestAvailable()</code></p>
+<p>​    令牌桶限流器的一个优势是可以减缓突发情况带来的问题，允许单次请求的令牌数量超出剩余令牌数量，但是多拿的令牌数要从后边的补，正所谓“前人挖坑，后人填坑”。</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">final</span> <span class="token keyword">long</span> <span class="token function">reserveEarliestAvailable</span><span class="token punctuation">(</span><span class="token keyword">int</span> requiredPermits<span class="token punctuation">,</span> <span class="token keyword">long</span> nowMicros<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token comment">// 前文提到过，在取数据之前计算桶中令牌数量</span>
+    <span class="token function">resync</span><span class="token punctuation">(</span>nowMicros<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">long</span> returnValue <span class="token operator">=</span> nextFreeTicketMicros<span class="token punctuation">;</span>
+    <span class="token keyword">double</span> storedPermitsToSpend <span class="token operator">=</span> <span class="token function">min</span><span class="token punctuation">(</span>requiredPermits<span class="token punctuation">,</span> <span class="token keyword">this</span><span class="token punctuation">.</span>storedPermits<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token comment">// 计算突发情况多取的令牌数量</span>
+    <span class="token keyword">double</span> freshPermits <span class="token operator">=</span> requiredPermits <span class="token operator">-</span> storedPermitsToSpend<span class="token punctuation">;</span>
+    <span class="token keyword">long</span> waitMicros <span class="token operator">=</span>
+        <span class="token function">storedPermitsToWaitTime</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>storedPermits<span class="token punctuation">,</span> storedPermitsToSpend<span class="token punctuation">)</span>
+            <span class="token operator">+</span> <span class="token punctuation">(</span><span class="token keyword">long</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>freshPermits <span class="token operator">*</span> stableIntervalMicros<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token comment">// 超发的情况，下一次可取令牌的时间往后延</span>
+    <span class="token keyword">this</span><span class="token punctuation">.</span>nextFreeTicketMicros <span class="token operator">=</span> <span class="token class-name">LongMath</span><span class="token punctuation">.</span><span class="token function">saturatedAdd</span><span class="token punctuation">(</span>nextFreeTicketMicros<span class="token punctuation">,</span> waitMicros<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">this</span><span class="token punctuation">.</span>storedPermits <span class="token operator">-=</span> storedPermitsToSpend<span class="token punctuation">;</span>
+    <span class="token keyword">return</span> returnValue<span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+
+
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Java/" class="category-chain-item">Java</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/limiter/" class="print-no-link">#limiter</a>
+      
+        <a href="/tags/Guava/" class="print-no-link">#Guava</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>漫谈限流器</div>
+      <div>https://blog.yjll.site/post/38378326.html</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>简斋</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2020年3月24日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/post/c7e397c2.html" title="Spring Cloud Gateway 分布式限流">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Spring Cloud Gateway 分布式限流</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/post/776d488.html" title="Mysql主从配置">
+                        <span class="hidden-mobile">Mysql主从配置</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.0/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script  src="https://lib.baomitu.com/prism/1.26.0/plugins/line-numbers/prism-line-numbers.min.js" ></script>
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

@@ -1,0 +1,784 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=dark>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+    <link rel="canonical" href="https://blog.yjll.site/post/15c08367.html"/>
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="简斋">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="canal 1.1.1版本之后, 内置增加客户端数据同步功能。我这里使用canal.adapter-1.1.5.tar.gz，该版本支持RabbitMQ，可从队列中取数据。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Canal实现Mysql至Elasticsearch实时同步">
+<meta property="og:url" content="https://blog.yjll.site/post/15c08367.html">
+<meta property="og:site_name" content="简斋">
+<meta property="og:description" content="canal 1.1.1版本之后, 内置增加客户端数据同步功能。我这里使用canal.adapter-1.1.5.tar.gz，该版本支持RabbitMQ，可从队列中取数据。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-06-29T00:00:00.000Z">
+<meta property="article:modified_time" content="2025-10-17T01:56:21.705Z">
+<meta property="article:author" content="简斋">
+<meta property="article:tag" content="Elasticsearch">
+<meta property="article:tag" content="Canal">
+<meta property="article:tag" content="Mysql">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>Canal实现Mysql至Elasticsearch实时同步 - 简斋</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/prism/1.26.0/plugins/line-numbers/prism-line-numbers.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"blog.yjll.site","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null},"gtag":null,"woyaola":null,"cnzz":null},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 5.4.2"><link rel="alternate" href="/atom.xml" title="简斋" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>简斋</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Canal实现Mysql至Elasticsearch实时同步"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2021-06-29 00:00" pubdate>
+          2021年6月29日 凌晨
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          608 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          6 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Canal实现Mysql至Elasticsearch实时同步</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>canal 1.1.1版本之后, 内置增加客户端数据同步功能。我这里使用<a target="_blank" rel="noopener" href="https://github.com/alibaba/canal/releases/download/canal-1.1.5/canal.adapter-1.1.5.tar.gz">canal.adapter-1.1.5.tar.gz</a>，该版本支持RabbitMQ，可从队列中取数据。</p>
+<span id="more"></span>
+
+<p>关于RabbitMQ配置和对接可以看我之前写的一篇<a href="/post/ab6a3b54.html" title="Canal推送Mysql增量数据至RabbitMQ">Canal推送Mysql增量数据至RabbitMQ</a>。</p>
+<h3 id="对接RabbitMQ"><a href="#对接RabbitMQ" class="headerlink" title="对接RabbitMQ"></a>对接RabbitMQ</h3><p>编辑<code>adapter/conf/application.yml</code>,配置rabbitMQ信息</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-yaml" data-language="yaml"><code class="language-yaml">
+<span class="token key atrule">canal.conf</span><span class="token punctuation">:</span>
+  <span class="token key atrule">mode</span><span class="token punctuation">:</span> rabbitMQ <span class="token comment">#tcp kafka rocketMQ rabbitMQ</span>
+  <span class="token key atrule">consumerProperties</span><span class="token punctuation">:</span>
+    <span class="token comment"># rabbitMQ consumer</span>
+    <span class="token key atrule">rabbitmq.host</span><span class="token punctuation">:</span> 127.0.0.1
+    <span class="token key atrule">rabbitmq.virtual.host</span><span class="token punctuation">:</span> /
+    <span class="token key atrule">rabbitmq.username</span><span class="token punctuation">:</span> root
+    <span class="token key atrule">rabbitmq.password</span><span class="token punctuation">:</span> root
+    <span class="token key atrule">rabbitmq.resource.ownerId</span><span class="token punctuation">:</span>
+
+  <span class="token key atrule">srcDataSources</span><span class="token punctuation">:</span>
+    <span class="token key atrule">defaultDS</span><span class="token punctuation">:</span>
+      <span class="token key atrule">url</span><span class="token punctuation">:</span> jdbc<span class="token punctuation">:</span>mysql<span class="token punctuation">:</span>//remote<span class="token punctuation">:</span>3306/test<span class="token punctuation">?</span>useUnicode=true
+      <span class="token key atrule">username</span><span class="token punctuation">:</span> root
+      <span class="token key atrule">password</span><span class="token punctuation">:</span> root
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+
+
+<h3 id="Elasticsearch配置"><a href="#Elasticsearch配置" class="headerlink" title="Elasticsearch配置"></a>Elasticsearch配置</h3><p>编辑<code>adapter/conf/application.yml</code>,配置canalAdapters同步es6，队列使用<code>canal.es</code></p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-yaml" data-language="yaml"><code class="language-yaml"><span class="token key atrule">canalAdapters</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">instance</span><span class="token punctuation">:</span> canal.es <span class="token comment"># canal instance Name or mq topic name</span>
+    <span class="token key atrule">groups</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token key atrule">groupId</span><span class="token punctuation">:</span> g1
+        <span class="token key atrule">outerAdapters</span><span class="token punctuation">:</span>
+          <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> es6
+            <span class="token key atrule">hosts</span><span class="token punctuation">:</span> 127.0.0.1<span class="token punctuation">:</span><span class="token number">9200</span> <span class="token comment"># 127.0.0.1:9200 for rest mode</span>
+            <span class="token key atrule">properties</span><span class="token punctuation">:</span>
+              <span class="token key atrule">mode</span><span class="token punctuation">:</span> rest <span class="token comment"># or rest</span>
+              <span class="token comment"># security.auth: test:123456 #  only used for rest mode</span>
+              <span class="token key atrule">cluster.name</span><span class="token punctuation">:</span> elasticsearch<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<p>canal会扫描<code>adapter/conf/es6/</code>下的所有配置文件，其中信息要和<code>adapter/conf/application.yml</code>匹配</p>
+<p>cat ./adapter/conf/es6/scan_log.yml</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-yaml" data-language="yaml"><code class="language-yaml">
+<span class="token key atrule">dataSourceKey</span><span class="token punctuation">:</span> defaultDS
+<span class="token key atrule">destination</span><span class="token punctuation">:</span> canal.es
+<span class="token key atrule">groupId</span><span class="token punctuation">:</span> g1
+<span class="token key atrule">esMapping</span><span class="token punctuation">:</span>
+  <span class="token key atrule">_index</span><span class="token punctuation">:</span> scan_log
+  <span class="token key atrule">_type</span><span class="token punctuation">:</span> _doc
+  <span class="token key atrule">_id</span><span class="token punctuation">:</span> id
+  <span class="token key atrule">sql</span><span class="token punctuation">:</span> <span class="token string">"select id, code, casecode from scan_log"</span>
+  <span class="token key atrule">commitBatch</span><span class="token punctuation">:</span> <span class="token number">3000</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+<h3 id="建立ElasticSearchmapping"><a href="#建立ElasticSearchmapping" class="headerlink" title="建立ElasticSearchmapping"></a>建立ElasticSearchmapping</h3><p>新版ES提倡使用<code>_doc</code>作为<code>_type</code>，我们这里使用Mysql表名作为ES的index，建立mapping</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-json" data-language="json"><code class="language-json">PUT /scan_log 
+<span class="token punctuation">&#123;</span>
+    <span class="token property">"mappings"</span><span class="token operator">:</span><span class="token punctuation">&#123;</span>
+        <span class="token property">"_doc"</span><span class="token operator">:</span><span class="token punctuation">&#123;</span>
+            <span class="token property">"properties"</span><span class="token operator">:</span><span class="token punctuation">&#123;</span>
+                <span class="token property">"code"</span><span class="token operator">:</span><span class="token punctuation">&#123;</span>
+                    <span class="token property">"type"</span><span class="token operator">:</span><span class="token string">"long"</span>
+                <span class="token punctuation">&#125;</span><span class="token punctuation">,</span>
+                <span class="token property">"casecode"</span> <span class="token operator">:</span> <span class="token punctuation">&#123;</span>
+                    <span class="token property">"type"</span> <span class="token operator">:</span> <span class="token string">"text"</span><span class="token punctuation">,</span>
+                    <span class="token property">"fields"</span> <span class="token operator">:</span> <span class="token punctuation">&#123;</span>
+                    <span class="token property">"keyword"</span> <span class="token operator">:</span> <span class="token punctuation">&#123;</span>
+                        <span class="token property">"type"</span> <span class="token operator">:</span> <span class="token string">"keyword"</span><span class="token punctuation">,</span>
+                        <span class="token property">"ignore_above"</span> <span class="token operator">:</span> <span class="token number">256</span>
+                      <span class="token punctuation">&#125;</span>
+                    <span class="token punctuation">&#125;</span>
+                <span class="token punctuation">&#125;</span>
+            <span class="token punctuation">&#125;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<p>我们也可以通过Logstash帮我们自动创建mapping,Logstash可以根据json格式创建mapping，关于Logstash可以看我之前写的文章<a href="/post/863f4886.html" title="使用Logstash同步Mysql数据到Elasticsearch">使用Logstash同步Mysql数据到Elasticsearch</a></p>
+<p>使用generator方式生成json</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">cat logstash-sample.conf 
+
+input &#123;
+ 
+  generator &#123;
+    count &#x3D;&gt; 1
+    message &#x3D;&gt; &#39;
+    &#123;
+        &quot;id&quot;: 628247969266810880,
+        &quot;code&quot;: 2199023788471,
+        &quot;casecode&quot;: &quot;999STZPMDDV&quot;
+    &#125;&#39;
+    codec &#x3D;&gt; json
+  &#125;
+&#125;
+
+output &#123;
+  elasticsearch &#123;
+    hosts &#x3D;&gt; [&quot;http:&#x2F;&#x2F;localhost:9200&quot;]
+    index &#x3D;&gt; &quot;scan_log&quot;
+    document_type &#x3D;&gt; &quot;_doc&quot;
+    document_id &#x3D;&gt; &quot;%&#123;id&#125;&quot;
+  &#125;
+&#125;
+
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<p>mapping创建完成后，我们启动项目，日志中发现这个错误</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none">Load canal adapter: es6 failed<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre></div></figure>
+
+
+<p>出现问题的不只我一个，<a target="_blank" rel="noopener" href="https://github.com/alibaba/canal/issues/3466">#3466</a>中有人提出解决方案，使用<a target="_blank" rel="noopener" href="https://github.com/alibaba/canal/releases/download/canal-1.1.5-alpha-2/canal.adapter-1.1.5-SNAPSHOT.tar.gz">canal.adapter-1.1.5-SNAPSHOT.tar.gz</a>版本中的<code>client-adapter.es6x-1.1.5-SNAPSHOT-jar-with-dependencies.jar</code>替换现版本中的<code>client-adapter.es6x-1.1.5-jar-with-dependencies.jar</code>，完美解决。</p>
+<h3 id="同步全量数据"><a href="#同步全量数据" class="headerlink" title="同步全量数据"></a>同步全量数据</h3><p>adapter支持通过REST接口的方式导入全量数据</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-none"><code class="language-none"># 先暂停同步
+curl http:&#x2F;&#x2F;127.0.0.1:8081&#x2F;syncSwitch&#x2F;canal.es
+curl http:&#x2F;&#x2F;127.0.0.1:8081&#x2F;syncSwitch&#x2F;canal.es&#x2F;off -X PUT
+# 全量导入
+curl http:&#x2F;&#x2F;127.0.0.1:8081&#x2F;etl&#x2F;es6&#x2F;scan_log.yml -X POST
+# 恢复同步
+curl http:&#x2F;&#x2F;127.0.0.1:8081&#x2F;syncSwitch&#x2F;canal.es&#x2F;on -X PUT
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<p>路径中的<code>scan_log.yml</code>为<code>adapter/conf/es6/</code>下的配置</p>
+<h3 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h3><p><a target="_blank" rel="noopener" href="https://github.com/alibaba/canal/wiki/Sync-ES">ElasticSearch适配器</a></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/alibaba/canal/wiki/ClientAdapter">ClientAdapter</a></p>
+<p><a target="_blank" rel="noopener" href="https://jasonkayzk.github.io/2019/10/03/ElasticSearch%E4%B8%BA%E4%BB%80%E4%B9%88%E5%9C%A8%E9%AB%98%E7%89%88%E6%9C%AC%E7%A7%BB%E9%99%A4%E6%98%A0%E5%B0%84%E7%B1%BB%E5%9E%8B/">ElasticSearch为什么在高版本移除映射类型</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.alibabacloud.com/help/zh/doc-detail/135297.htm">通过Canal将MySQL数据同步到阿里云Elasticsearch</a></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E5%BA%94%E7%94%A8/" class="category-chain-item">应用</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Elasticsearch/" class="print-no-link">#Elasticsearch</a>
+      
+        <a href="/tags/Canal/" class="print-no-link">#Canal</a>
+      
+        <a href="/tags/Mysql/" class="print-no-link">#Mysql</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Canal实现Mysql至Elasticsearch实时同步</div>
+      <div>https://blog.yjll.site/post/15c08367.html</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>简斋</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2021年6月29日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/post/abdd8675.html" title="Canal实现Mysql至ClickHouse实时同步">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Canal实现Mysql至ClickHouse实时同步</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/post/ab6a3b54.html" title="Canal推送Mysql增量数据至RabbitMQ">
+                        <span class="hidden-mobile">Canal推送Mysql增量数据至RabbitMQ</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.0/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script  src="https://lib.baomitu.com/prism/1.26.0/plugins/line-numbers/prism-line-numbers.min.js" ></script>
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

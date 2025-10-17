@@ -1,0 +1,917 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=dark>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+    <link rel="canonical" href="https://blog.yjll.site/post/65703737.html"/>
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="简斋">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="类型 说明 举例    PROPAGATION_REQUIRED 支持当前事务 如果不存，就建一个（默认的） A,B，如果A有事务，则B使用A事务。如果A没有事务，则B开启一个新的事务。（A,B在同一个事务中）   PROPAGATION_SUPPORTS 支持当前事务 如果不存在，就不使用事务 A,B，如果A有事务，则B就使用A的事务。如果A没有事务，则B就不使用事务   PROPAGAT">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring编程式事务原理">
+<meta property="og:url" content="https://blog.yjll.site/post/65703737.html">
+<meta property="og:site_name" content="简斋">
+<meta property="og:description" content="类型 说明 举例    PROPAGATION_REQUIRED 支持当前事务 如果不存，就建一个（默认的） A,B，如果A有事务，则B使用A事务。如果A没有事务，则B开启一个新的事务。（A,B在同一个事务中）   PROPAGATION_SUPPORTS 支持当前事务 如果不存在，就不使用事务 A,B，如果A有事务，则B就使用A的事务。如果A没有事务，则B就不使用事务   PROPAGAT">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img.yjll.site/img/PlatformTransactionManager.png">
+<meta property="article:published_time" content="2020-11-06T00:00:00.000Z">
+<meta property="article:modified_time" content="2025-10-17T01:56:21.704Z">
+<meta property="article:author" content="简斋">
+<meta property="article:tag" content="Spring">
+<meta property="article:tag" content="Transaction">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://img.yjll.site/img/PlatformTransactionManager.png">
+  
+  
+  
+  <title>Spring编程式事务原理 - 简斋</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/prism/1.26.0/plugins/line-numbers/prism-line-numbers.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"blog.yjll.site","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null},"gtag":null,"woyaola":null,"cnzz":null},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 5.4.2"><link rel="alternate" href="/atom.xml" title="简斋" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>简斋</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Spring编程式事务原理"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2020-11-06 00:00" pubdate>
+          2020年11月6日 凌晨
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          1.7k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          15 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Spring编程式事务原理</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <table>
+<thead>
+<tr>
+<th>类型</th>
+<th>说明</th>
+<th>举例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>PROPAGATION_REQUIRED</td>
+<td>支持当前事务 如果不存，就建一个（默认的）</td>
+<td>A,B，如果A有事务，则B使用A事务。如果A没有事务，则B开启一个新的事务。（A,B在同一个事务中）</td>
+</tr>
+<tr>
+<td>PROPAGATION_SUPPORTS</td>
+<td>支持当前事务 如果不存在，就不使用事务</td>
+<td>A,B，如果A有事务，则B就使用A的事务。如果A没有事务，则B就不使用事务</td>
+</tr>
+<tr>
+<td>PROPAGATION_MANDATORY</td>
+<td>支持当前事务 如果不存在，抛出异常</td>
+<td>A,B，如果A有事务，则B就使用A的事务。如果A没有事务，则B抛出异常</td>
+</tr>
+<tr>
+<td>PROPAGATION_REQUIRES_NEW</td>
+<td>如果有事务存在 挂起当前事务，创建一个新的事务</td>
+<td>A,B，如果A有事务，B将A的事务挂起，并重新创建一个事务（A，B不在一个事务中，两个事务互不影响）</td>
+</tr>
+<tr>
+<td>PROPAGATION_NOT_SUPPORTED</td>
+<td>以非事务方式运行 如果有事务存在，挂起当前事务</td>
+<td>A,B，非事务方式运行，A有事务就挂起事务</td>
+</tr>
+<tr>
+<td>PROPAGATION_NEVER</td>
+<td>以非事务方式运行 如果有事务存在，抛出异常</td>
+<td>总是以非事务运行</td>
+</tr>
+<tr>
+<td>PROPAGATION_NESTED</td>
+<td>如果当前事务存在，则嵌套事务执行</td>
+<td>基于SavePonit技术。（保存点） A,B，A有事务，A执行之后，将A事务执行之后的内容保存到SavePonit。B事务有异常的情况，用户需要自己设置事务是提交还是回滚到保存点</td>
+</tr>
+</tbody></table>
+<figure><div class="code-wrapper"><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token annotation punctuation">@Autowired</span>
+<span class="token keyword">private</span> <span class="token class-name">DataSourceTransactionManager</span> dstManager<span class="token punctuation">;</span>
+<span class="token annotation punctuation">@Autowired</span>
+<span class="token keyword">private</span> <span class="token class-name">UserDao</span> userDao<span class="token punctuation">;</span>
+
+<span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">updateTest</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+  <span class="token class-name">DefaultTransactionDefinition</span> def <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">DefaultTransactionDefinition</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  def<span class="token punctuation">.</span><span class="token function">setPropagationBehavior</span><span class="token punctuation">(</span><span class="token class-name">TransactionDefinition</span><span class="token punctuation">.</span><span class="token constant">PROPAGATION_REQUIRES_NEW</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token class-name">TransactionStatus</span> transaction<span class="token operator">=</span> dstManager<span class="token punctuation">.</span><span class="token function">getTransaction</span><span class="token punctuation">(</span>def<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">try</span><span class="token punctuation">&#123;</span>
+    userDao<span class="token punctuation">.</span><span class="token function">updateTest</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span><span class="token keyword">catch</span><span class="token punctuation">(</span><span class="token class-name">Exception</span> e<span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+    log<span class="token punctuation">.</span><span class="token function">error</span><span class="token punctuation">(</span>e<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>e<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    dstManager<span class="token punctuation">.</span><span class="token function">rollback</span><span class="token punctuation">(</span>transaction<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+  dstManager<span class="token punctuation">.</span><span class="token function">commit</span><span class="token punctuation">(</span>transaction<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<p><code>DataSourceTransactionManager</code>是<code>PlatformTransactionManager</code>的一个实现。<code>PlatformTransactionManager</code>是Spring事务处理抽象层中的管理器。</p>
+<p>统一一致的事务抽象是Spring框架的一大优势，无论是全局事务还是本地事务，JTA、JDBC、Hibernate还是JPA，Spring都使用统一的编程模型，使得应用程序可以很容易地在全局事务与本地事务，或者不同的事务框架之间进行切换。下图是Spring事务抽象的核心类图：</p>
+<p><img src="https://img.yjll.site/img/PlatformTransactionManager.png" srcset="/img/loading.gif" lazyload alt="PlatformTransactionManager"></p>
+<p>PlatformTransactionManager：事务管理器<br>getTransaction方法：事务获取操作，根据事务属性定义，获取当前事务或者创建新事物；<br>commit方法：事务提交操作，注意这里所说的提交并非直接提交事务，而是根据当前事务状态执行提交或者回滚操作；<br>rollback方法：事务回滚操作，同样，也并非一定直接回滚事务，也有可能只是标记事务为只读，等待其他调用方执行回滚。</p>
+<p>TransactionDefinition：事务属性定义<br>getPropagationBehavior方法：返回事务的传播属性，默认是PROPAGATION_REQUIRED；<br>getIsolationLevel方法：返回事务隔离级别，事务隔离级别只有在创建新事务时才有效，也就是说只对应传播属性PROPAGATION_REQUIRED和PROPAGATION_REQUIRES_NEW；<br>getTimeout方法：返回事务超时时间，以秒为单位，同样只有在创建新事务时才有效；<br>isReadOnly方法：是否优化为只读事务，支持这项属性的事务管理器会将事务标记为只读，只读事务不允许有写操作，不支持只读属性的事务管理器需要忽略这项设置，这一点跟其他事务属性定义不同，针对其他不支持的属性设置，事务管理器应该抛出异常。<br>getName方法：返回事务名称，声明式事务中默认值为“类的完全限定名.方法名”。</p>
+<p>TransactionStatus：当前事务状态<br>isNewTransaction方法：当前方法是否创建了新事务（区别于使用现有事务以及没有事务）；<br>hasSavepoint方法：在嵌套事务场景中，判断当前事务是否包含保存点；<br>setRollbackOnly和isRollbackOnly方法：只读属性设置（主要用于标记事务，等待回滚）和查询；<br>flush方法：刷新底层会话中的修改到数据库，一般用于刷新如Hibernate/JPA的会话，是否生效由具体事务资源实现决定；<br>isCompleted方法：判断当前事务是否已完成（已提交或者已回滚）。</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">final</span> <span class="token class-name">TransactionStatus</span> <span class="token function">getTransaction</span><span class="token punctuation">(</span><span class="token annotation punctuation">@Nullable</span> <span class="token class-name">TransactionDefinition</span> definition<span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">TransactionException</span> <span class="token punctuation">&#123;</span>
+    <span class="token comment">// 创建DataSourceTransactionObject</span>
+		<span class="token class-name">Object</span> transaction <span class="token operator">=</span> <span class="token function">doGetTransaction</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+		<span class="token comment">// Cache debug flag to avoid repeated checks.</span>
+		<span class="token keyword">boolean</span> debugEnabled <span class="token operator">=</span> logger<span class="token punctuation">.</span><span class="token function">isDebugEnabled</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+		<span class="token keyword">if</span> <span class="token punctuation">(</span>definition <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+			<span class="token comment">// Use defaults if no transaction definition given.</span>
+			definition <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">DefaultTransactionDefinition</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token punctuation">&#125;</span>
+
+    <span class="token comment">// 已有事务逻辑，通过handleExistingTransaction方法处理</span>
+		<span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">isExistingTransaction</span><span class="token punctuation">(</span>transaction<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+			<span class="token comment">// Existing transaction found -> check propagation behavior to find out how to behave.</span>
+			<span class="token keyword">return</span> <span class="token function">handleExistingTransaction</span><span class="token punctuation">(</span>definition<span class="token punctuation">,</span> transaction<span class="token punctuation">,</span> debugEnabled<span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token punctuation">&#125;</span>
+
+		<span class="token comment">// Check definition settings for new transaction.</span>
+		<span class="token keyword">if</span> <span class="token punctuation">(</span>definition<span class="token punctuation">.</span><span class="token function">getTimeout</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&lt;</span> <span class="token class-name">TransactionDefinition</span><span class="token punctuation">.</span><span class="token constant">TIMEOUT_DEFAULT</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+			<span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">InvalidTimeoutException</span><span class="token punctuation">(</span><span class="token string">"Invalid transaction timeout"</span><span class="token punctuation">,</span> definition<span class="token punctuation">.</span><span class="token function">getTimeout</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token punctuation">&#125;</span>
+
+    <span class="token comment">// 以下是当前无事务的情况</span>
+    <span class="token comment">// - PROPAGATION_MANDATORY：当前事务不存在，抛出异常</span>
+		<span class="token comment">// No existing transaction found -> check propagation behavior to find out how to proceed.</span>
+		<span class="token keyword">if</span> <span class="token punctuation">(</span>definition<span class="token punctuation">.</span><span class="token function">getPropagationBehavior</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token class-name">TransactionDefinition</span><span class="token punctuation">.</span><span class="token constant">PROPAGATION_MANDATORY</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+			<span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">IllegalTransactionStateException</span><span class="token punctuation">(</span>
+					<span class="token string">"No existing transaction found for transaction marked with propagation 'mandatory'"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token punctuation">&#125;</span>
+    <span class="token comment">// 无事务便创建事务</span>
+		<span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>definition<span class="token punctuation">.</span><span class="token function">getPropagationBehavior</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token class-name">TransactionDefinition</span><span class="token punctuation">.</span><span class="token constant">PROPAGATION_REQUIRED</span> <span class="token operator">||</span>
+				definition<span class="token punctuation">.</span><span class="token function">getPropagationBehavior</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token class-name">TransactionDefinition</span><span class="token punctuation">.</span><span class="token constant">PROPAGATION_REQUIRES_NEW</span> <span class="token operator">||</span>
+				definition<span class="token punctuation">.</span><span class="token function">getPropagationBehavior</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token class-name">TransactionDefinition</span><span class="token punctuation">.</span><span class="token constant">PROPAGATION_NESTED</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+			<span class="token class-name">SuspendedResourcesHolder</span> suspendedResources <span class="token operator">=</span> <span class="token function">suspend</span><span class="token punctuation">(</span><span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token keyword">if</span> <span class="token punctuation">(</span>debugEnabled<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+				logger<span class="token punctuation">.</span><span class="token function">debug</span><span class="token punctuation">(</span><span class="token string">"Creating new transaction with name ["</span> <span class="token operator">+</span> definition<span class="token punctuation">.</span><span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">"]: "</span> <span class="token operator">+</span> definition<span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token punctuation">&#125;</span>
+			<span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
+				<span class="token keyword">boolean</span> newSynchronization <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token function">getTransactionSynchronization</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token constant">SYNCHRONIZATION_NEVER</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+				<span class="token class-name">DefaultTransactionStatus</span> status <span class="token operator">=</span> <span class="token function">newTransactionStatus</span><span class="token punctuation">(</span>
+						definition<span class="token punctuation">,</span> transaction<span class="token punctuation">,</span> <span class="token boolean">true</span><span class="token punctuation">,</span> newSynchronization<span class="token punctuation">,</span> debugEnabled<span class="token punctuation">,</span> suspendedResources<span class="token punctuation">)</span><span class="token punctuation">;</span>
+				<span class="token function">doBegin</span><span class="token punctuation">(</span>transaction<span class="token punctuation">,</span> definition<span class="token punctuation">)</span><span class="token punctuation">;</span>
+				<span class="token function">prepareSynchronization</span><span class="token punctuation">(</span>status<span class="token punctuation">,</span> definition<span class="token punctuation">)</span><span class="token punctuation">;</span>
+				<span class="token keyword">return</span> status<span class="token punctuation">;</span>
+			<span class="token punctuation">&#125;</span>
+			<span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">RuntimeException</span> <span class="token operator">|</span> <span class="token class-name">Error</span> ex<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+				<span class="token function">resume</span><span class="token punctuation">(</span><span class="token keyword">null</span><span class="token punctuation">,</span> suspendedResources<span class="token punctuation">)</span><span class="token punctuation">;</span>
+				<span class="token keyword">throw</span> ex<span class="token punctuation">;</span>
+			<span class="token punctuation">&#125;</span>
+		<span class="token punctuation">&#125;</span>
+    <span class="token comment">// 无事务不需创建</span>
+		<span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+			<span class="token comment">// Create "empty" transaction: no actual transaction, but potentially synchronization.</span>
+			<span class="token keyword">if</span> <span class="token punctuation">(</span>definition<span class="token punctuation">.</span><span class="token function">getIsolationLevel</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token class-name">TransactionDefinition</span><span class="token punctuation">.</span><span class="token constant">ISOLATION_DEFAULT</span> <span class="token operator">&amp;&amp;</span> logger<span class="token punctuation">.</span><span class="token function">isWarnEnabled</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+				logger<span class="token punctuation">.</span><span class="token function">warn</span><span class="token punctuation">(</span><span class="token string">"Custom isolation level specified but no actual transaction initiated; "</span> <span class="token operator">+</span>
+						<span class="token string">"isolation level will effectively be ignored: "</span> <span class="token operator">+</span> definition<span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token punctuation">&#125;</span>
+			<span class="token keyword">boolean</span> newSynchronization <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token function">getTransactionSynchronization</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token constant">SYNCHRONIZATION_ALWAYS</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token keyword">return</span> <span class="token function">prepareTransactionStatus</span><span class="token punctuation">(</span>definition<span class="token punctuation">,</span> <span class="token keyword">null</span><span class="token punctuation">,</span> <span class="token boolean">true</span><span class="token punctuation">,</span> newSynchronization<span class="token punctuation">,</span> debugEnabled<span class="token punctuation">,</span> <span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token punctuation">&#125;</span>
+	<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+
+<figure><div class="code-wrapper"><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token class-name"><span class="token namespace">org<span class="token punctuation">.</span>springframework<span class="token punctuation">.</span>jdbc<span class="token punctuation">.</span>datasource<span class="token punctuation">.</span></span>DataSourceTransactionManager</span>#doGetTransaction
+
+	<span class="token keyword">protected</span> <span class="token class-name">Object</span> <span class="token function">doGetTransaction</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		<span class="token class-name">DataSourceTransactionObject</span> txObject <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">DataSourceTransactionObject</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		txObject<span class="token punctuation">.</span><span class="token function">setSavepointAllowed</span><span class="token punctuation">(</span><span class="token function">isNestedTransactionAllowed</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token class-name">ConnectionHolder</span> conHolder <span class="token operator">=</span>
+				<span class="token punctuation">(</span><span class="token class-name">ConnectionHolder</span><span class="token punctuation">)</span> <span class="token class-name">TransactionSynchronizationManager</span><span class="token punctuation">.</span><span class="token function">getResource</span><span class="token punctuation">(</span><span class="token function">obtainDataSource</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		txObject<span class="token punctuation">.</span><span class="token function">setConnectionHolder</span><span class="token punctuation">(</span>conHolder<span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token keyword">return</span> txObject<span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+
+<span class="token class-name"><span class="token namespace">org<span class="token punctuation">.</span>springframework<span class="token punctuation">.</span>jdbc<span class="token punctuation">.</span>datasource<span class="token punctuation">.</span></span>DataSourceTransactionManager</span>#isExistingTransaction
+
+	<span class="token keyword">protected</span> <span class="token keyword">boolean</span> <span class="token function">isExistingTransaction</span><span class="token punctuation">(</span><span class="token class-name">Object</span> transaction<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		<span class="token class-name">DataSourceTransactionObject</span> txObject <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token class-name">DataSourceTransactionObject</span><span class="token punctuation">)</span> transaction<span class="token punctuation">;</span>
+		<span class="token keyword">return</span> <span class="token punctuation">(</span>txObject<span class="token punctuation">.</span><span class="token function">hasConnectionHolder</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span> txObject<span class="token punctuation">.</span><span class="token function">getConnectionHolder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">isTransactionActive</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<p><code>TransactionSynchronizationManager</code> 是事务同步管理器，TransactionSynchronizationManager通过ThreadLocal对象在当前线程记录了resources和synchronizations属性。resources是一个HashMap，用于记录当前参与事务的事务资源，方便进行事务同步，在DataSourceTransactionManager的例子中就是以dataSource作为key，保存了数据库连接，这样在同一个线程中，不同的方法调用就可以通过dataSource获取相同的数据库连接，从而保证所有操作在一个事务中进行。</p>
+<p>org.springframework.transaction.support.AbstractPlatformTransactionManager#handleExistingTransaction</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">private</span> <span class="token class-name">TransactionStatus</span> <span class="token function">handleExistingTransaction</span><span class="token punctuation">(</span>
+		<span class="token class-name">TransactionDefinition</span> definition<span class="token punctuation">,</span> <span class="token class-name">Object</span> transaction<span class="token punctuation">,</span> <span class="token keyword">boolean</span> debugEnabled<span class="token punctuation">)</span>
+		<span class="token keyword">throws</span> <span class="token class-name">TransactionException</span> <span class="token punctuation">&#123;</span>
+   <span class="token comment">// PROPAGATION_NEVER 直接抛出异常</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span>definition<span class="token punctuation">.</span><span class="token function">getPropagationBehavior</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token class-name">TransactionDefinition</span><span class="token punctuation">.</span><span class="token constant">PROPAGATION_NEVER</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		<span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">IllegalTransactionStateException</span><span class="token punctuation">(</span>
+				<span class="token string">"Existing transaction found for transaction marked with propagation 'never'"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+  	<span class="token comment">// PROPAGATION_NOT_SUPPORTED suspend挂起当前事务，当前方法不使用事务</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span>definition<span class="token punctuation">.</span><span class="token function">getPropagationBehavior</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token class-name">TransactionDefinition</span><span class="token punctuation">.</span><span class="token constant">PROPAGATION_NOT_SUPPORTED</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		<span class="token keyword">if</span> <span class="token punctuation">(</span>debugEnabled<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+			logger<span class="token punctuation">.</span><span class="token function">debug</span><span class="token punctuation">(</span><span class="token string">"Suspending current transaction"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token punctuation">&#125;</span>
+		<span class="token class-name">Object</span> suspendedResources <span class="token operator">=</span> <span class="token function">suspend</span><span class="token punctuation">(</span>transaction<span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token keyword">boolean</span> newSynchronization <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token function">getTransactionSynchronization</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token constant">SYNCHRONIZATION_ALWAYS</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token keyword">return</span> <span class="token function">prepareTransactionStatus</span><span class="token punctuation">(</span>
+				definition<span class="token punctuation">,</span> <span class="token keyword">null</span><span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">,</span> newSynchronization<span class="token punctuation">,</span> debugEnabled<span class="token punctuation">,</span> suspendedResources<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+  <span class="token comment">// PROPAGATION_REQUIRES_NEW suspend挂起当前事务，doBegin创建一个新事务</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span>definition<span class="token punctuation">.</span><span class="token function">getPropagationBehavior</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token class-name">TransactionDefinition</span><span class="token punctuation">.</span><span class="token constant">PROPAGATION_REQUIRES_NEW</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		<span class="token keyword">if</span> <span class="token punctuation">(</span>debugEnabled<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+			logger<span class="token punctuation">.</span><span class="token function">debug</span><span class="token punctuation">(</span><span class="token string">"Suspending current transaction, creating new transaction with name ["</span> <span class="token operator">+</span>
+					definition<span class="token punctuation">.</span><span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">"]"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token punctuation">&#125;</span>
+		<span class="token class-name">SuspendedResourcesHolder</span> suspendedResources <span class="token operator">=</span> <span class="token function">suspend</span><span class="token punctuation">(</span>transaction<span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
+			<span class="token keyword">boolean</span> newSynchronization <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token function">getTransactionSynchronization</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token constant">SYNCHRONIZATION_NEVER</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token class-name">DefaultTransactionStatus</span> status <span class="token operator">=</span> <span class="token function">newTransactionStatus</span><span class="token punctuation">(</span>
+					definition<span class="token punctuation">,</span> transaction<span class="token punctuation">,</span> <span class="token boolean">true</span><span class="token punctuation">,</span> newSynchronization<span class="token punctuation">,</span> debugEnabled<span class="token punctuation">,</span> suspendedResources<span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token function">doBegin</span><span class="token punctuation">(</span>transaction<span class="token punctuation">,</span> definition<span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token function">prepareSynchronization</span><span class="token punctuation">(</span>status<span class="token punctuation">,</span> definition<span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token keyword">return</span> status<span class="token punctuation">;</span>
+		<span class="token punctuation">&#125;</span>
+		<span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">RuntimeException</span> <span class="token operator">|</span> <span class="token class-name">Error</span> beginEx<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+			<span class="token function">resumeAfterBeginException</span><span class="token punctuation">(</span>transaction<span class="token punctuation">,</span> suspendedResources<span class="token punctuation">,</span> beginEx<span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token keyword">throw</span> beginEx<span class="token punctuation">;</span>
+		<span class="token punctuation">&#125;</span>
+	<span class="token punctuation">&#125;</span>
+  <span class="token comment">// PROPAGATION_NESTED 嵌套事务</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span>definition<span class="token punctuation">.</span><span class="token function">getPropagationBehavior</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token class-name">TransactionDefinition</span><span class="token punctuation">.</span><span class="token constant">PROPAGATION_NESTED</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		<span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span><span class="token function">isNestedTransactionAllowed</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+			<span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">NestedTransactionNotSupportedException</span><span class="token punctuation">(</span>
+					<span class="token string">"Transaction manager does not allow nested transactions by default - "</span> <span class="token operator">+</span>
+					<span class="token string">"specify 'nestedTransactionAllowed' property with value 'true'"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token punctuation">&#125;</span>
+		<span class="token keyword">if</span> <span class="token punctuation">(</span>debugEnabled<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+			logger<span class="token punctuation">.</span><span class="token function">debug</span><span class="token punctuation">(</span><span class="token string">"Creating nested transaction with name ["</span> <span class="token operator">+</span> definition<span class="token punctuation">.</span><span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">"]"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token punctuation">&#125;</span>
+		<span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">useSavepointForNestedTransaction</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+			<span class="token comment">// Create savepoint within existing Spring-managed transaction,</span>
+			<span class="token comment">// through the SavepointManager API implemented by TransactionStatus.</span>
+			<span class="token comment">// Usually uses JDBC 3.0 savepoints. Never activates Spring synchronization.</span>
+			<span class="token class-name">DefaultTransactionStatus</span> status <span class="token operator">=</span>
+					<span class="token function">prepareTransactionStatus</span><span class="token punctuation">(</span>definition<span class="token punctuation">,</span> transaction<span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">,</span> debugEnabled<span class="token punctuation">,</span> <span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+			status<span class="token punctuation">.</span><span class="token function">createAndHoldSavepoint</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token keyword">return</span> status<span class="token punctuation">;</span>
+		<span class="token punctuation">&#125;</span>
+     <span class="token comment">// PROPAGATION_REQUIRED、PROPAGATION_SUPPORTS、PROPAGATION_MANDATORY 使用当前事务</span>
+		<span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+			<span class="token comment">// Nested transaction through nested begin and commit/rollback calls.</span>
+			<span class="token comment">// Usually only for JTA: Spring synchronization might get activated here</span>
+			<span class="token comment">// in case of a pre-existing JTA transaction.</span>
+			<span class="token keyword">boolean</span> newSynchronization <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token function">getTransactionSynchronization</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token constant">SYNCHRONIZATION_NEVER</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token class-name">DefaultTransactionStatus</span> status <span class="token operator">=</span> <span class="token function">newTransactionStatus</span><span class="token punctuation">(</span>
+					definition<span class="token punctuation">,</span> transaction<span class="token punctuation">,</span> <span class="token boolean">true</span><span class="token punctuation">,</span> newSynchronization<span class="token punctuation">,</span> debugEnabled<span class="token punctuation">,</span> <span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token function">doBegin</span><span class="token punctuation">(</span>transaction<span class="token punctuation">,</span> definition<span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token function">prepareSynchronization</span><span class="token punctuation">(</span>status<span class="token punctuation">,</span> definition<span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token keyword">return</span> status<span class="token punctuation">;</span>
+		<span class="token punctuation">&#125;</span>
+	<span class="token punctuation">&#125;</span>
+
+	<span class="token comment">// Assumably PROPAGATION_SUPPORTS or PROPAGATION_REQUIRED.</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span>debugEnabled<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		logger<span class="token punctuation">.</span><span class="token function">debug</span><span class="token punctuation">(</span><span class="token string">"Participating in existing transaction"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">isValidateExistingTransaction</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		<span class="token keyword">if</span> <span class="token punctuation">(</span>definition<span class="token punctuation">.</span><span class="token function">getIsolationLevel</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token class-name">TransactionDefinition</span><span class="token punctuation">.</span><span class="token constant">ISOLATION_DEFAULT</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+			<span class="token class-name">Integer</span> currentIsolationLevel <span class="token operator">=</span> <span class="token class-name">TransactionSynchronizationManager</span><span class="token punctuation">.</span><span class="token function">getCurrentTransactionIsolationLevel</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token keyword">if</span> <span class="token punctuation">(</span>currentIsolationLevel <span class="token operator">==</span> <span class="token keyword">null</span> <span class="token operator">||</span> currentIsolationLevel <span class="token operator">!=</span> definition<span class="token punctuation">.</span><span class="token function">getIsolationLevel</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+				<span class="token class-name">Constants</span> isoConstants <span class="token operator">=</span> <span class="token class-name">DefaultTransactionDefinition</span><span class="token punctuation">.</span>constants<span class="token punctuation">;</span>
+				<span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">IllegalTransactionStateException</span><span class="token punctuation">(</span><span class="token string">"Participating transaction with definition ["</span> <span class="token operator">+</span>
+						definition <span class="token operator">+</span> <span class="token string">"] specifies isolation level which is incompatible with existing transaction: "</span> <span class="token operator">+</span>
+						<span class="token punctuation">(</span>currentIsolationLevel <span class="token operator">!=</span> <span class="token keyword">null</span> <span class="token operator">?</span>
+								isoConstants<span class="token punctuation">.</span><span class="token function">toCode</span><span class="token punctuation">(</span>currentIsolationLevel<span class="token punctuation">,</span> <span class="token class-name">DefaultTransactionDefinition</span><span class="token punctuation">.</span><span class="token constant">PREFIX_ISOLATION</span><span class="token punctuation">)</span> <span class="token operator">:</span>
+								<span class="token string">"(unknown)"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token punctuation">&#125;</span>
+		<span class="token punctuation">&#125;</span>
+		<span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>definition<span class="token punctuation">.</span><span class="token function">isReadOnly</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+			<span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token class-name">TransactionSynchronizationManager</span><span class="token punctuation">.</span><span class="token function">isCurrentTransactionReadOnly</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+				<span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">IllegalTransactionStateException</span><span class="token punctuation">(</span><span class="token string">"Participating transaction with definition ["</span> <span class="token operator">+</span>
+						definition <span class="token operator">+</span> <span class="token string">"] is not marked as read-only but existing transaction is"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token punctuation">&#125;</span>
+		<span class="token punctuation">&#125;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token keyword">boolean</span> newSynchronization <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token function">getTransactionSynchronization</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token constant">SYNCHRONIZATION_NEVER</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">return</span> <span class="token function">prepareTransactionStatus</span><span class="token punctuation">(</span>definition<span class="token punctuation">,</span> transaction<span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">,</span> newSynchronization<span class="token punctuation">,</span> debugEnabled<span class="token punctuation">,</span> <span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+
+
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/54067384">【技术干货】Spring事务原理一探</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/oDeviloo/article/details/101757711">spring事务传播性源码解析</a></p>
+<p><a target="_blank" rel="noopener" href="https://my.oschina.net/marvelcode/blog/3195379">Spring事务源码解析</a></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Java/" class="category-chain-item">Java</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Spring/" class="print-no-link">#Spring</a>
+      
+        <a href="/tags/Transaction/" class="print-no-link">#Transaction</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Spring编程式事务原理</div>
+      <div>https://blog.yjll.site/post/65703737.html</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>简斋</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2020年11月6日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/post/ee11952c.html" title="使用Docker部署Python项目">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">使用Docker部署Python项目</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/post/adfcf5ef.html" title="Python通过跳板机连接远程MySQL">
+                        <span class="hidden-mobile">Python通过跳板机连接远程MySQL</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.0/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script  src="https://lib.baomitu.com/prism/1.26.0/plugins/line-numbers/prism-line-numbers.min.js" ></script>
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

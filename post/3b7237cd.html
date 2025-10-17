@@ -1,0 +1,818 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=dark>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+    <link rel="canonical" href="https://blog.yjll.site/post/3b7237cd.html"/>
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="简斋">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="注：本文的spring-boot-starter-data-elasticsearch的版本为2.2.10.RELEASEElasticsearch版本为6.8.12  RestHighLevelClient是ES官方推荐使用的客户端，新版本的spring-data-elasticsearch也对RestHighLevelClient进行了支持，使用ElasticsearchRestTempla">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring-Elasticsearch使用原生DSL查询">
+<meta property="og:url" content="https://blog.yjll.site/post/3b7237cd.html">
+<meta property="og:site_name" content="简斋">
+<meta property="og:description" content="注：本文的spring-boot-starter-data-elasticsearch的版本为2.2.10.RELEASEElasticsearch版本为6.8.12  RestHighLevelClient是ES官方推荐使用的客户端，新版本的spring-data-elasticsearch也对RestHighLevelClient进行了支持，使用ElasticsearchRestTempla">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-10-22T00:00:00.000Z">
+<meta property="article:modified_time" content="2025-10-17T01:56:21.704Z">
+<meta property="article:author" content="简斋">
+<meta property="article:tag" content="Elasticsearch">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="Groovy">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>Spring-Elasticsearch使用原生DSL查询 - 简斋</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/prism/1.26.0/plugins/line-numbers/prism-line-numbers.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"blog.yjll.site","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null},"gtag":null,"woyaola":null,"cnzz":null},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 5.4.2"><link rel="alternate" href="/atom.xml" title="简斋" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>简斋</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Spring-Elasticsearch使用原生DSL查询"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2020-10-22 00:00" pubdate>
+          2020年10月22日 凌晨
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          749 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          7 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Spring-Elasticsearch使用原生DSL查询</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>注：本文的<code>spring-boot-starter-data-elasticsearch</code>的版本为<code>2.2.10.RELEASE</code><br>Elasticsearch版本为<code>6.8.12</code></p>
+</blockquote>
+<p><code>RestHighLevelClient</code>是ES官方推荐使用的客户端，新版本的<code>spring-data-elasticsearch</code>也对<code>RestHighLevelClient</code>进行了支持，使用<code>ElasticsearchRestTemplate</code>对<code>RestHighLevelClient</code>进行封装，我们直接使用<code>ElasticsearchRestTemplate</code>即可，但是对于参数较多特别是有嵌套聚合的查询，使用Spring提供的API过于繁琐，我们想使用原生的DSL进行查询，但是<code>ElasticsearchRestTemplate</code>并不支持这种写法。我们知道<code>ElasticsearchRestTemplate</code>底层一定通过JSON传输，分析内部实现，看看实现方式。</p>
+<h3 id="ElasticsearchRestTemplate底层"><a href="#ElasticsearchRestTemplate底层" class="headerlink" title="ElasticsearchRestTemplate底层"></a>ElasticsearchRestTemplate底层</h3><p>拿ElasticsearchRestTemplate#query这个方法举例，<code>query</code>调用<code>client.search()</code>，这个client就是<code>RestHighLevelClient</code>，Spring对其进行了二次封装。</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token annotation punctuation">@Override</span>
+<span class="token keyword">public</span> <span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> <span class="token class-name">T</span> <span class="token function">query</span><span class="token punctuation">(</span><span class="token class-name">SearchQuery</span> query<span class="token punctuation">,</span> <span class="token class-name">ResultsExtractor</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> resultsExtractor<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token class-name">SearchResponse</span> response <span class="token operator">=</span> <span class="token function">doSearch</span><span class="token punctuation">(</span><span class="token function">prepareSearch</span><span class="token punctuation">(</span>query<span class="token punctuation">,</span> <span class="token class-name">Optional</span><span class="token punctuation">.</span><span class="token function">ofNullable</span><span class="token punctuation">(</span>query<span class="token punctuation">.</span><span class="token function">getQuery</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">,</span> query<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">return</span> resultsExtractor<span class="token punctuation">.</span><span class="token function">extract</span><span class="token punctuation">(</span>response<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+
+   <span class="token keyword">private</span> <span class="token class-name">SearchResponse</span> <span class="token function">doSearch</span><span class="token punctuation">(</span><span class="token class-name">SearchRequest</span> searchRequest<span class="token punctuation">,</span> <span class="token class-name">SearchQuery</span> searchQuery<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token function">prepareSearch</span><span class="token punctuation">(</span>searchRequest<span class="token punctuation">,</span> searchQuery<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+	<span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
+		<span class="token keyword">return</span> client<span class="token punctuation">.</span><span class="token function">search</span><span class="token punctuation">(</span>searchRequest<span class="token punctuation">,</span> <span class="token class-name">RequestOptions</span><span class="token punctuation">.</span><span class="token constant">DEFAULT</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">IOException</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+     
+		<span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">ElasticsearchException</span><span class="token punctuation">(</span><span class="token string">"Error for search request with scroll: "</span> <span class="token operator">+</span> searchRequest<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> e<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<p>继续看<code>RestHighLevelClient#search</code>方法，主要是对参数和返回值进行封装，层层跟进该方法会调用<code>client.performRequest</code>，此处的<code>client</code>并非指<code>RestHighLevelClient</code>，而是更底层的客户端<code>RestClient</code>。</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">final</span> <span class="token class-name">SearchResponse</span> <span class="token function">search</span><span class="token punctuation">(</span><span class="token class-name">SearchRequest</span> searchRequest<span class="token punctuation">,</span> <span class="token class-name">RequestOptions</span> options<span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">IOException</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">return</span> <span class="token function">performRequestAndParseEntity</span><span class="token punctuation">(</span>
+            searchRequest<span class="token punctuation">,</span>
+            r <span class="token operator">-></span> <span class="token class-name">RequestConverters</span><span class="token punctuation">.</span><span class="token function">search</span><span class="token punctuation">(</span>r<span class="token punctuation">,</span> <span class="token string">"_search"</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+            options<span class="token punctuation">,</span>
+            <span class="token class-name">SearchResponse</span><span class="token operator">::</span><span class="token function">fromXContent</span><span class="token punctuation">,</span>
+            <span class="token function">emptySet</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">private</span> <span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Req</span><span class="token punctuation">,</span> <span class="token class-name">Resp</span><span class="token punctuation">></span></span> <span class="token class-name">Resp</span> <span class="token function">internalPerformRequest</span><span class="token punctuation">(</span><span class="token class-name">Req</span> request<span class="token punctuation">,</span>
+                                        <span class="token class-name">CheckedFunction</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Req</span><span class="token punctuation">,</span> <span class="token class-name">Request</span><span class="token punctuation">,</span> <span class="token class-name">IOException</span><span class="token punctuation">></span></span> requestConverter<span class="token punctuation">,</span>
+                                        <span class="token class-name">RequestOptions</span> options<span class="token punctuation">,</span>
+                                        <span class="token class-name">CheckedFunction</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Response</span><span class="token punctuation">,</span> <span class="token class-name">Resp</span><span class="token punctuation">,</span> <span class="token class-name">IOException</span><span class="token punctuation">></span></span> responseConverter<span class="token punctuation">,</span>
+                                        <span class="token class-name">Set</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Integer</span><span class="token punctuation">></span></span> ignores<span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">IOException</span> <span class="token punctuation">&#123;</span>
+    <span class="token class-name">Request</span> req <span class="token operator">=</span> requestConverter<span class="token punctuation">.</span><span class="token function">apply</span><span class="token punctuation">(</span>request<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    req<span class="token punctuation">.</span><span class="token function">setOptions</span><span class="token punctuation">(</span>options<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token class-name">Response</span> response<span class="token punctuation">;</span>
+    <span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
+        response <span class="token operator">=</span> client<span class="token punctuation">.</span><span class="token function">performRequest</span><span class="token punctuation">(</span>req<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">ResponseException</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>ignores<span class="token punctuation">.</span><span class="token function">contains</span><span class="token punctuation">(</span>e<span class="token punctuation">.</span><span class="token function">getResponse</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getStatusLine</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getStatusCode</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
+                <span class="token keyword">return</span> responseConverter<span class="token punctuation">.</span><span class="token function">apply</span><span class="token punctuation">(</span>e<span class="token punctuation">.</span><span class="token function">getResponse</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">Exception</span> innerException<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                <span class="token comment">// the exception is ignored as we now try to parse the response as an error.</span>
+                <span class="token comment">// this covers cases like get where 404 can either be a valid document not found response,</span>
+                <span class="token comment">// or an error for which parsing is completely different. We try to consider the 404 response as a valid one</span>
+                <span class="token comment">// first. If parsing of the response breaks, we fall back to parsing it as an error.</span>
+                <span class="token keyword">throw</span> <span class="token function">parseResponseException</span><span class="token punctuation">(</span>e<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token keyword">throw</span> <span class="token function">parseResponseException</span><span class="token punctuation">(</span>e<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> responseConverter<span class="token punctuation">.</span><span class="token function">apply</span><span class="token punctuation">(</span>response<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span> <span class="token keyword">catch</span><span class="token punctuation">(</span><span class="token class-name">Exception</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">IOException</span><span class="token punctuation">(</span><span class="token string">"Unable to parse response body for "</span> <span class="token operator">+</span> response<span class="token punctuation">,</span> e<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<p><code>RestClient#performRequest</code>接受的参数为<code>org.elasticsearch.client.Request</code>，其中重要的参数有一下几个:<br><code>method</code>:Http的方法<code>GET</code>,<code>POST</code>等<br><code>endpoint</code>:包含<code>index</code>,<code>type</code>,查询类别等,如<code>code/data/_search</code><br><code>entity</code>:包好JSON的实体</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token class-name">Response</span> <span class="token function">performRequest</span><span class="token punctuation">(</span><span class="token class-name">Request</span> request<span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">IOException</span> <span class="token punctuation">&#123;</span>
+    <span class="token class-name">SyncResponseListener</span> listener <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">SyncResponseListener</span><span class="token punctuation">(</span>maxRetryTimeoutMillis<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">performRequestAsyncNoCatch</span><span class="token punctuation">(</span>request<span class="token punctuation">,</span> listener<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span> listener<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">public</span> <span class="token keyword">final</span> <span class="token keyword">class</span> <span class="token class-name">Request</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">String</span> method<span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">String</span> endpoint<span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">Map</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">String</span><span class="token punctuation">,</span> <span class="token class-name">String</span><span class="token punctuation">></span></span> parameters <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HashMap</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">private</span> <span class="token class-name">HttpEntity</span> entity<span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token class-name">RequestOptions</span> options <span class="token operator">=</span> <span class="token class-name">RequestOptions</span><span class="token punctuation">.</span><span class="token constant">DEFAULT</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<h3 id="使用RestClient进行请求"><a href="#使用RestClient进行请求" class="headerlink" title="使用RestClient进行请求"></a>使用RestClient进行请求</h3><p>知道底层的运行方式，我们构建一个Request再调用<code>RestClient#performRequest</code>即可。因为涉及到字符串拼接和json序列化，用Java不太方便，我这里使用Groovy语法编写。</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-groovy" data-language="groovy"><code class="language-groovy">String dsl <span class="token operator">=</span> <span class="token interpolation-string"><span class="token string">"""
+        &#123;
+          "size": 0,
+          "query": &#123;
+            "terms": &#123;
+              "xxx": [
+                </span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">$&#123;</span><span class="token expression">xxx</span><span class="token interpolation-punctuation punctuation">&#125;</span></span><span class="token string">
+              ]
+            &#125;
+          &#125;,
+          "aggs": &#123;
+            "first": &#123;
+              "value_count": &#123;
+                "field": "first_id"
+              &#125;
+            &#125;,
+            "second": &#123;
+              "value_count": &#123;
+                "field": "second_id"
+              &#125;
+            &#125;
+          &#125;
+        &#125;
+        """</span></span>
+String endpoint <span class="token operator">=</span> <span class="token string">'code/data/_search'</span>
+Request request <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Request</span><span class="token punctuation">(</span>HttpPost<span class="token punctuation">.</span>METHOD_NAME<span class="token punctuation">,</span> endpoint<span class="token punctuation">)</span><span class="token punctuation">;</span>
+request<span class="token punctuation">.</span><span class="token function">setJsonEntity</span><span class="token punctuation">(</span>dsl<span class="token punctuation">)</span>
+
+Response response <span class="token operator">=</span> elasticsearchRestTemplate<span class="token punctuation">.</span><span class="token function">getClient</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getLowLevelClient</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">performRequest</span><span class="token punctuation">(</span>request<span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> respJson <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">JsonSlurper</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">parse</span><span class="token punctuation">(</span>response<span class="token punctuation">.</span><span class="token function">getEntity</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getContent</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+CodeTerms codeTerms <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">CodeTerms</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>with <span class="token punctuation">&#123;</span>
+    firstCount <span class="token operator">=</span> respJson<span class="token punctuation">[</span><span class="token string">'aggregations'</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token string">'first'</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token string">'value'</span><span class="token punctuation">]</span> <span class="token keyword">as</span> Long
+    secondCount <span class="token operator">=</span> respJson<span class="token punctuation">[</span><span class="token string">'aggregations'</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token string">'second'</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token string">'value'</span><span class="token punctuation">]</span> <span class="token keyword">as</span> Long
+    it
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<h3 id="使用RestHighLevelClient直接进行简单查询"><a href="#使用RestHighLevelClient直接进行简单查询" class="headerlink" title="使用RestHighLevelClient直接进行简单查询"></a>使用RestHighLevelClient直接进行简单查询</h3><p>简单查询，使用QueryBuilders组装SearchRequest</p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-groovy" data-language="groovy"><code class="language-groovy">String dsl <span class="token operator">=</span> <span class="token string">'''
+&#123;
+  "range": &#123;
+      "second_upload_time": &#123;
+      "gte": "2020-06-01 00:00:00",
+      "lte": "2020-06-02 00:00:00"
+      &#125;
+  &#125;
+&#125;
+'''</span>
+SearchSourceBuilder ssb <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">SearchSourceBuilder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">query</span><span class="token punctuation">(</span>QueryBuilders<span class="token punctuation">.</span><span class="token function">wrapperQuery</span><span class="token punctuation">(</span>dsl<span class="token punctuation">)</span><span class="token punctuation">)</span>
+SearchRequest searchRequest <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">SearchRequest</span><span class="token punctuation">(</span><span class="token interpolation-string"><span class="token string">"code"</span></span><span class="token punctuation">)</span>
+        <span class="token punctuation">.</span><span class="token function">types</span><span class="token punctuation">(</span><span class="token interpolation-string"><span class="token string">"data"</span></span><span class="token punctuation">)</span>
+        <span class="token punctuation">.</span><span class="token function">source</span><span class="token punctuation">(</span>ssb<span class="token punctuation">)</span>
+<span class="token keyword">def</span> response <span class="token operator">=</span> elasticsearchRestTemplate<span class="token punctuation">.</span><span class="token function">getClient</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">search</span><span class="token punctuation">(</span>searchRequest<span class="token punctuation">,</span> RequestOptions<span class="token punctuation">.</span>DEFAULT<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<h3 id="使用ElasticsearchRestTemplate直接进行简单查询"><a href="#使用ElasticsearchRestTemplate直接进行简单查询" class="headerlink" title="使用ElasticsearchRestTemplate直接进行简单查询"></a>使用ElasticsearchRestTemplate直接进行简单查询</h3><p>使用StringQuery基于DSL定义的JSON的查询，底层使用<code>SearchRequest</code></p>
+<figure><div class="code-wrapper"><pre class="line-numbers language-groovy" data-language="groovy"><code class="language-groovy">StringQuery stringQuery <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">StringQuery</span><span class="token punctuation">(</span>
+		<span class="token interpolation-string"><span class="token string">"""
+        &#123;
+            "wildcard": &#123;
+              "internal_code.keyword": &#123;
+                "value": \"</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">$&#123;</span><span class="token expression">internalCode</span><span class="token interpolation-punctuation punctuation">&#125;</span></span><span class="token string">\"
+              &#125;
+            &#125;
+          &#125;
+    """</span></span>
+    <span class="token punctuation">)</span><span class="token punctuation">;</span>
+    searchQuery<span class="token punctuation">.</span><span class="token function">addIndices</span><span class="token punctuation">(</span><span class="token interpolation-string"><span class="token string">"test"</span></span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    searchQuery<span class="token punctuation">.</span><span class="token function">addTypes</span><span class="token punctuation">(</span><span class="token interpolation-string"><span class="token string">"test"</span></span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+					
+List<span class="token operator">&lt;</span>TestObject<span class="token operator">></span> list <span class="token operator">=</span> template<span class="token punctuation">.</span><span class="token function">queryForList</span><span class="token punctuation">(</span>stringQuery<span class="token punctuation">,</span> TestObject<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></div></figure>
+
+<h3 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h3><p><a target="_blank" rel="noopener" href="https://my.oschina.net/xiaopei/blog/4302389">Elasticsearch如何查询使用JSON字符串的DSL</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/Qensq/article/details/103081923?utm_medium=distribute.pc_relevant_t0.none-task-blog-BlogCommendFromMachineLearnPai2-1.add_param_isCf&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-BlogCommendFromMachineLearnPai2-1.add_param_isCf">Elasticsearch 常用聚合(group by || sum || count)分组查询</a></p>
+<p><a target="_blank" rel="noopener" href="https://tuwaner.com/2019/01/17/%E5%9F%BA%E4%BA%8ESpring-Data-Elasticsearch%E4%B8%89%E7%A7%8D%E6%9F%A5%E8%AF%A2%E7%9A%84%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B/">基于Spring-Data-Elasticsearch三种查询的使用示例</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_38966984/article/details/91049878">Spring-data-Elasticsearch聚合查询</a></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Java/" class="category-chain-item">Java</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Elasticsearch/" class="print-no-link">#Elasticsearch</a>
+      
+        <a href="/tags/Java/" class="print-no-link">#Java</a>
+      
+        <a href="/tags/Groovy/" class="print-no-link">#Groovy</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Spring-Elasticsearch使用原生DSL查询</div>
+      <div>https://blog.yjll.site/post/3b7237cd.html</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>简斋</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2020年10月22日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/post/45e649c7.html" title="Java加密压缩Zip">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Java加密压缩Zip</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/post/bee47fed.html" title="IDEA部署应用到远程Docker">
+                        <span class="hidden-mobile">IDEA部署应用到远程Docker</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.0/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script  src="https://lib.baomitu.com/prism/1.26.0/plugins/line-numbers/prism-line-numbers.min.js" ></script>
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
